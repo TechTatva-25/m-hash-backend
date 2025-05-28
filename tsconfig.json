@@ -23,6 +23,6 @@
       "@tests/*": ["./tests/*"]
     }
   },
-  "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["node_modules", "dist", "types"]
+  "include": ["src/**/*", "tests/**/*","types/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

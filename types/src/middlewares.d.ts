@@ -1,6 +1,7 @@
+//<reference types="cookie-parser" />
 import { NextFunction, Request, Response } from "express";
-import { Logger } from "../libs/logger";
-import { HttpException } from "../models/exceptions";
+import { Logger } from "./libs/logging";
+import { HttpException } from "./models/exceptions";
 export declare class HttpLogger {
     private logger;
     constructor(logger: Logger);

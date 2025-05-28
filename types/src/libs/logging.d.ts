@@ -1,4 +1,4 @@
-import winston from "winston";
+import * as winston from "winston";
 export declare class Logger {
     private readonly name;
     private readonly _dirname;
