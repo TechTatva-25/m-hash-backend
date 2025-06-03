@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { RequestHandler } from "express";
 import cors, { CorsOptions } from "cors";
 import { Server } from "node:http";
+import fileUpload from "express-fileupload";
 
 import { Logger } from "./libs/logger";
 import { HttpLogger } from "./middlewares/logger.middleware";
@@ -23,6 +24,9 @@ const corsOptions: CorsOptions = {
 app.use(cors(corsOptions));
 
 app.use(express.json());
+
+app.use(fileUpload({ limits: { fileSize: 10 * 1024 * 1024 } }));
+
 app.use(httpLogger.log);
 
 initRoutes(app);
