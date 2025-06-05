@@ -48,3 +48,5 @@ router.get(
 );
 
 router.get("/get-problems", getMyProblems as RequestHandler);
+
+export default router;
