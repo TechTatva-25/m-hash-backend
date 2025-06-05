@@ -14,7 +14,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.824.0",
     "@aws-sdk/client-ses": "^3.817.0",
+    "@aws-sdk/s3-request-presigner": "^3.824.0",
     "@react-email/components": "^0.0.41",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
