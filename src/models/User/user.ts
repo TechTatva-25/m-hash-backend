@@ -18,6 +18,8 @@ export interface IUser extends Document {
 	role: UserRoles;
 	problem_statement?: string[];
 	verified: boolean;
+	otp?: string;
+	otpExpiresAt?: Date;
 	token?: string;
 	createdAt: Date;
 	updatedAt: Date;
@@ -36,6 +38,8 @@ const UserSchema: Schema<IUser> = new Schema<IUser>(
 		role: { type: String, enum: [UserRoles.USER, UserRoles.ADMIN, UserRoles.JUDGE], default: UserRoles.USER },
 		verified: { type: Boolean, default: false },
 		problem_statement: [{ type: String, ref: "ProblemStatement" }],
+		otp: { type: String, required: false, default: null },
+		otpExpiresAt: { type: Date, required: false, default: null },
 		token: { type: String, required: false, default: null },
 	},
 	{ timestamps: true }
@@ -55,7 +59,7 @@ UserSchema.methods.validPassword = async function (password: string): Promise<bo
 UserSchema.methods.toJSON = function (): Partial<IUser> {
 	const user = (this as IUser).toObject() as IUser;
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const { password, token, ...rest } = user;
+	const { password, otp, ...rest } = user;
 	return rest;
 };
 
