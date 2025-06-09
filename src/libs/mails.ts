@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import * as aws from "@aws-sdk/client-ses";
+//import * as aws from "@aws-sdk/client-ses";
 import dotenv from "dotenv";
 import SMTPTransport from "nodemailer";
 
