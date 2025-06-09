@@ -2,7 +2,8 @@ import "dotenv/config";
 import express, { RequestHandler } from "express";
 import cors, { CorsOptions } from "cors";
 import { Server } from "node:http";
-
+import session from "express-session";
+import MongoStore from "connect-mongo";
 import { Logger } from "./libs/logger";
 import { HttpLogger } from "./middlewares/logger.middleware";
 import { NotFoundException } from "./models/exceptions";
@@ -23,7 +24,25 @@ const corsOptions: CorsOptions = {
 app.use(cors(corsOptions));
 
 app.use(express.json());
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "defaultsecret",
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_DB_URI || "mongodb://localhost:27017/yourdb",
+    }),
+    cookie: {
+      maxAge: 1000 * 60 * 60, // 1 hour
+      httpOnly: true,
+      secure: false, // true if HTTPS in prod
+    },
+  })
+);
+
 app.use(httpLogger.log);
+
 
 initRoutes(app);
 

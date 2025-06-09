@@ -1,17 +1,29 @@
-import { Body, Button, Container, Head, Hr, Html, Img, Preview, render, Section, Text } from "@react-email/components";
+import {
+	Body,
+	Button,
+	Container,
+	Head,
+	Hr,
+	Html,
+	Img,
+	Preview,
+	Section,
+	render,
+	Text,
+} from "@react-email/components";
 import * as React from "react";
 
 interface EmailProps {
-	url: string;
+	otp: string;
 }
 
 function Email(props: EmailProps): React.JSX.Element {
-	const { url } = props;
+	const { otp } = props;
 
 	return (
 		<Html>
 			<Head />
-			<Preview>Verify your account by clicking the button below</Preview>
+			<Preview>Your OTP for verifying your account</Preview>
 			<Body style={main}>
 				<Container style={container}>
 					<Img
@@ -31,17 +43,19 @@ function Email(props: EmailProps): React.JSX.Element {
 					/>
 					<Text style={paragraph}>
 						Greetings, <br />
-						Kindly verify your account by clicking the button below. The link will expire in 24 hours,
-						verify now!
+						Use the following OTP to verify your account. It is valid for 24 hours.
 					</Text>
-					<Section style={btnContainer}>
-						<Button style={buttonPrimary} href={url}>
-							CLICK HERE
-						</Button>
+
+					<Section style={otpBoxContainer}>
+						<Text style={otpBox}>{otp}</Text>
 					</Section>
-					<Text style={paragraph}>In case the link expires, click resend mail.</Text>
+
+					<Text style={paragraph}>Didn’t get the code? Try resending the email.</Text>
 					<Section style={btnContainer}>
-						<Button style={buttonSecondary} href={`${process.env.CLIENT_URL ?? ""}/verify-email`}>
+						<Button
+							style={buttonSecondary}
+							href={`${process.env.CLIENT_URL ?? ""}/verify-email`}
+						>
 							RESEND MAIL
 						</Button>
 					</Section>
@@ -51,8 +65,7 @@ function Email(props: EmailProps): React.JSX.Element {
 						<a href="mailto:manipal.hackathon@manipal.edu" style={footerLink}>
 							Manipal Hackathon support email
 						</a>
-						.
-						<br />
+						.<br />
 						Manipal Hackathon Team
 					</Text>
 				</Container>
@@ -60,6 +73,24 @@ function Email(props: EmailProps): React.JSX.Element {
 		</Html>
 	);
 }
+
+const otpBoxContainer = {
+	textAlign: "center" as const,
+	margin: "20px 0",
+};
+
+const otpBox = {
+	display: "inline-block",
+	backgroundColor: "#f2f2f2",
+	color: "#333",
+	padding: "16px 32px",
+	fontSize: "28px",
+	fontWeight: "bold" as const,
+	borderRadius: "8px",
+	letterSpacing: "8px",
+};
+
+
 
 const main = {
 	backgroundColor: "#ffffff",
@@ -95,15 +126,15 @@ const btnContainer = {
 	margin: "20px 0",
 };
 
-const buttonPrimary = {
-	backgroundColor: "#ff6d2d",
-	borderRadius: "5px",
-	color: "#ffffff",
-	fontSize: "16px",
-	textDecoration: "none",
-	padding: "12px 24px",
-	display: "inline-block" as const,
-};
+// const buttonPrimary = {
+// 	backgroundColor: "#ff6d2d",
+// 	borderRadius: "5px",
+// 	color: "#ffffff",
+// 	fontSize: "16px",
+// 	textDecoration: "none",
+// 	padding: "12px 24px",
+// 	display: "inline-block" as const,
+// };
 
 const buttonSecondary = {
 	backgroundColor: "#ff6d2d",
@@ -131,6 +162,6 @@ const footerLink = {
 	textDecoration: "none",
 };
 
-export const emailHtml = async (url: string): Promise<string> => {
-	return await render(<Email url={url} />);
+export const emailHtml = async (otp: string): Promise<string> => {
+	return await render(<Email otp={otp} />);
 };
