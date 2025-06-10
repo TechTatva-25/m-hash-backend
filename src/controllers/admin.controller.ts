@@ -1,14 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
 
-import { transporter } from "@/libs/mails";
-import Team from "@/models/Team/team";
-import User, {UserRoles} from "@/models/User/user";
-import { BadRequestException } from "@/models/exceptions";
-import Progress from "@/models/Progress/progress";
-import Submission, {SubmissionStatus} from "@/models/Submission/submission";
-import { deleteFile, getFile } from "@/libs/s3";
-import Stage,{Stages} from "@/models/Stage/stage";
+import { transporter } from "../libs/mails";
+import Team from "../models/Team/team";
+import User, {UserRoles} from "../models/User/user";
+import { BadRequestException } from "../models/exceptions";
+import Progress from "../models/Progress/progress";
+import Submission, {SubmissionStatus} from "../models/Submission/submission";
+//import { deleteFile, getFile } from "../libs/s3";
+import Stage,{Stages} from "../models/Stage/stage";
 
 
 const emailHtml = (content: string): string => `
@@ -95,66 +95,68 @@ export const makeJudge = async (req: Request, res: Response, next: NextFunction)
 	}
 };
 
-export const deleteTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-	try {
-		const { teamId } = req.body as Record<string, string>;
-		const team = await Team.findByIdAndDelete(teamId);
-		if (!team) {
-			throw new Error("Team not found");
-		}
+// Commenetd as file submission is not setup
 
-		const submission = await Submission.findOne({ team_id: team._id });
-		if (submission) {
-			const file_name = submission.submission_file_name;
-			const response = await deleteFile(file_name, true);
-			if (!response) {
-				throw new BadRequestException(`Error deleting submission PPT: ${file_name}}`);
-			}
+// export const deleteTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+// 	try {
+// 		const { teamId } = req.body as Record<string, string>;
+// 		const team = await Team.findByIdAndDelete(teamId);
+// 		if (!team) {
+// 			throw new Error("Team not found");
+// 		}
 
-			await Submission.findByIdAndDelete(submission._id);
-		}
+// 		const submission = await Submission.findOne({ team_id: team._id });
+// 		if (submission) {
+// 			const file_name = submission.submission_file_name;
+// 			const response = await deleteFile(file_name, true);
+// 			if (!response) {
+// 				throw new BadRequestException(`Error deleting submission PPT: ${file_name}}`);
+// 			}
 
-		res.status(200).send("Team deleted successfully");
-	} catch (error) {
-		next(error);
-	}
-};
+// 			await Submission.findByIdAndDelete(submission._id);
+// 		}
 
-export const getAllSubmissions = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
-	try {
-		const submissions = await Submission.find({})
-			.populate("team_id", "name")
-			.populate("problem_id", "title sdg_id sdg_title");
-		for (const submission of submissions) {
-			const getFileResponse = await getFile(
-				submission.submission_file_name ? submission.submission_file_name : submission.submission_url,
-				true
-			);
+// 		res.status(200).send("Team deleted successfully");
+// 	} catch (error) {
+// 		next(error);
+// 	}
+// };
 
-			if (getFileResponse.submissionUrl) {
-				submission.submission_url = getFileResponse.submissionUrl;
-			} else {
-				submission.submission_url = "URL fetch failure";
-			}
+// export const getAllSubmissions = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+// 	try {
+// 		const submissions = await Submission.find({})
+// 			.populate("team_id", "name")
+// 			.populate("problem_id", "title sdg_id sdg_title");
+// 		for (const submission of submissions) {
+// 			const getFileResponse = await getFile(
+// 				submission.submission_file_name ? submission.submission_file_name : submission.submission_url,
+// 				true
+// 			);
 
-			const submission_video_file_name = submission.submission_video_file_name;
+// 			if (getFileResponse.submissionUrl) {
+// 				submission.submission_url = getFileResponse.submissionUrl;
+// 			} else {
+// 				submission.submission_url = "URL fetch failure";
+// 			}
 
-			if (submission_video_file_name) {
-				const getFileResponse = await getFile(submission.submission_video_file_name, false);
+// 			const submission_video_file_name = submission.submission_video_file_name;
 
-				if (!getFileResponse.submissionUrl) {
-					throw new BadRequestException("Submission URL fetch failure for video");
-				}
+// 			if (submission_video_file_name) {
+// 				const getFileResponse = await getFile(submission.submission_video_file_name, false);
 
-				submission.submission_video_url = getFileResponse.submissionUrl;
-			}
-		}
+// 				if (!getFileResponse.submissionUrl) {
+// 					throw new BadRequestException("Submission URL fetch failure for video");
+// 				}
 
-		res.status(200).json(submissions);
-	} catch (error) {
-		next(error);
-	}
-};
+// 				submission.submission_video_url = getFileResponse.submissionUrl;
+// 			}
+// 		}
+
+// 		res.status(200).json(submissions);
+// 	} catch (error) {
+// 		next(error);
+// 	}
+// };
 
 export const adminApprove = async (req: Request, res: Response): Promise<void> => {
 	try {
