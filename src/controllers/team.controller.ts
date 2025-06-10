@@ -2,19 +2,19 @@ import type { NextFunction, Request, Response } from "express";
 import type { UploadedFile } from "express-fileupload";
 import { Types } from "mongoose";
 
-import type { ITeam } from "@/models/Team/team";
-import type { IUser } from "@/models/User/user";
+import type { ITeam } from "../models/Team/team";
+import type { IUser } from "../models/User/user";
 
-import { BadRequestException, ConflictException } from "@/models/exceptions";
-import Submission, { SubmissionStatus } from "@/models/Submission/submission";
-import Team from "@/models/Team/team";
-import User from "@/models/User/user";
-import College from "@/models/College/college";
-import Progress from "@/models/Progress/progress";
-import Invite from "@/models/Invite";
-import Stage, { Stages } from "@/models/Stage/stage";
-import Problem from "@/models/Problem/problem";
-import RuntimeConfig from "@/models/Config/config";
+import { BadRequestException, ConflictException } from "../models/exceptions";
+import Submission, { SubmissionStatus } from "../models/Submission/submission";
+import Team from "../models/Team/team";
+import User from "../models/User/user";
+import College from "../models/College/college";
+import Progress from "../models/Progress/progress";
+import Invite from "../models/Invite";
+import Stage, { Stages } from "../models/Stage/stage";
+import Problem from "../models/Problem/problem";
+import RuntimeConfig from "../models/Config/config";
 
 export const getTeam = async (
   req: Request,
@@ -100,7 +100,7 @@ export const deleteTeam = async (
 
     const submission = await Submission.findOne({ team_id: team._id });
     if (submission) {
-      const file_name = submission.submission_file_name;
+      // const file_name = submission.submission_file_name;
 
       // TODO: AWS S3 configuration and uncomment the following code block
       // const response = await deleteFile(file_name, true);
@@ -407,7 +407,7 @@ export const deleteSubmission = async (
     //  throw new BadRequestException("Only team leader can delete submissions");
     // }
 
-    const file_name = submission.submission_file_name;
+    // const file_name = submission.submission_file_name;
 
     // TODO: AWS S3 configuration and uncoment the following code block
     // const response = await deleteFile(file_name, true);

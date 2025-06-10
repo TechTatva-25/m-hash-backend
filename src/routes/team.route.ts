@@ -4,18 +4,18 @@ import rateLimiter from "express-rate-limit";
 import {
   authRequiredMiddleWare,
   validationMiddleware,
-} from "@/middlewares/auth.middleware";
-import { registrationStoppedMiddleware } from "@/middlewares/registrationStopped.middleware";
+} from "../middlewares/auth.middleware";
+import { registrationStoppedMiddleware } from "../middlewares/registrationStopped.middleware";
 import {
   createTeamValidator,
   listTeamsValidator,
   removeMemberValidator,
-} from "@/models/Team/validators/validator";
-import { TooManyRequestsException } from "@/models/exceptions";
+} from "../models/Team/validators/validator";
+import { TooManyRequestsException } from "../models/exceptions";
 import {
   createSubmissionValidator,
   deleteSubmissionValidator,
-} from "@/models/Submission/validators/validator";
+} from "../models/Submission/validators/validator";
 import {
   createTeam,
   deleteSubmission,
@@ -28,7 +28,7 @@ import {
   listTeams,
   makeSubmission,
   removeMember,
-} from "@/controllers/team.controller";
+} from "../controllers/team.controller";
 
 const router = express.Router();
 

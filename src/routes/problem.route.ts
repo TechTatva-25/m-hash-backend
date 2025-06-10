@@ -6,17 +6,17 @@ import {
   getProblem,
   getProblems,
   updateProblem,
-} from "@/controllers/problem.controller";
+} from "../controllers/problem.controller";
 import {
   adminRequiredMiddleware,
   validationMiddleware,
-} from "@/middlewares/auth.middleware";
+} from "../middlewares/auth.middleware";
 import {
   createProblemValidator,
   deleteProblemValidator,
   getProblemValidator,
   updateProblemValidator,
-} from "@/models/Problem/validators/validator";
+} from "../models/Problem/validators/validator";
 
 const router = express.Router();
 

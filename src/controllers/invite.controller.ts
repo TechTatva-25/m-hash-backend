@@ -5,10 +5,10 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
-} from "@/models/exceptions";
-import Team, { TEAM_LIMIT } from "@/models/Team/team";
-import User from "@/models/User/user";
-import Invite, { InviteType } from "@/models/Invite";
+} from "../models/exceptions";
+import Team, { TEAM_LIMIT } from "../models/Team/team";
+import User from "../models/User/user";
+import Invite, { InviteType } from "../models/Invite";
 
 export const inviteUser = async (
   req: Request,

@@ -1,17 +1,17 @@
 import express, { RequestHandler } from "express";
 import rateLimiter from "express-rate-limit";
 
-import { TooManyRequestsException } from "@/models/exceptions";
+import { TooManyRequestsException } from "../models/exceptions";
 import {
   inviteUserValidator,
   inviteValidator,
   sendJoinRequestValidator,
-} from "@/models/Invite/validator";
+} from "../models/Invite/validator";
 import {
   authRequiredMiddleWare,
   validationMiddleware,
-} from "@/middlewares/auth.middleware";
-import { registrationStoppedMiddleware } from "@/middlewares/registrationStopped.middleware";
+} from "../middlewares/auth.middleware";
+import { registrationStoppedMiddleware } from "../middlewares/registrationStopped.middleware";
 import {
   acceptInvite,
   acceptJoinRequest,
@@ -23,7 +23,7 @@ import {
   rejectInvite,
   rejectJoinRequest,
   sendJoinRequest,
-} from "@/controllers/invite.controller";
+} from "../controllers/invite.controller";
 
 const router = express.Router();
 
