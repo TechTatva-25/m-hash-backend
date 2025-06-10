@@ -10,11 +10,11 @@ import Submission, { SubmissionStatus } from "@/models/Submission/submission";
 import Team from "@/models/Team/team";
 import User from "@/models/User/user";
 import College from "@/models/College/college";
-import Progress from "@/models/Progress";
+import Progress from "@/models/Progress/progress";
 import Invite from "@/models/Invite";
 import Stage, { Stages } from "@/models/Stage/stage";
-import Problem from "@/models/Problem";
-import RuntimeConfig from "@/models/RuntimeConfig";
+import Problem from "@/models/Problem/problem";
+import RuntimeConfig from "@/models/Config/config";
 
 export const getTeam = async (
   req: Request,

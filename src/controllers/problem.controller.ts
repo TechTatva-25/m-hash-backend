@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 
-import Problem from "@/models/Problem";
+import Problem from "@/models/Problem/problem";
 
 export const getProblems = async (
   _req: Request,

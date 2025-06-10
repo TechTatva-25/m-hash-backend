@@ -16,7 +16,7 @@ import {
   deleteProblemValidator,
   getProblemValidator,
   updateProblemValidator,
-} from "@/models/Problem/validator";
+} from "@/models/Problem/validators/validator";
 
 const router = express.Router();
 
