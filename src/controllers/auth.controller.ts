@@ -2,13 +2,13 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
-import { sendForgotPasswordEmail, sendVerificationEmail, SignType } from "../libs/mails";
+import { sendForgotPasswordEmail, sendOTPVerificationEmail, SignType } from "../libs/mails";
 import College from "../models/College/college";
 import { BadRequestException, ConflictException, UnauthorizedException } from "../models/exceptions";
 import Submission, { SubmissionStatus } from "../models/Submission/submission";
 import Team from "../models/Team/team";
 import User from "../models/User/user";
-
+import bcrypt from "bcrypt"
 export interface queryProps {
 	$or?: Record<string, { $regex: string; $options: string }>[];
 	college?: string;
@@ -48,9 +48,9 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 			string
 		>;
 
-		const token = jwt.sign({ email, type: SignType.VERIFICATION }, process.env.JWT_SECRET ?? "secret", {
-			expiresIn: "1d",
-		});
+		// const token = jwt.sign({ email, type: SignType.VERIFICATION }, process.env.JWT_SECRET ?? "secret", {
+		// 	expiresIn: "1d",
+		// });
 
 		const collegeResp = await College.findById(college);
 		if (!collegeResp) throw new BadRequestException("College not found");
@@ -62,11 +62,11 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 			mobile_number,
 			college,
 			collegeOther: collegeName,
-			gender,
-			token,
-		});
+			gender
+		}) as mongoose.Document & { _id: mongoose.Types.ObjectId };
 		await user.save();
-		await sendVerificationEmail(email, token);
+		// await sendVerificationEmail(email, token);
+		await sendOTPVerificationEmail(email, (user._id as mongoose.Types.ObjectId).toString());
 		res.status(201).send({ message: "User created" });
 	} catch (err) {
 		next(err);
@@ -150,7 +150,7 @@ export const me = async (req: Request, res: Response, next: NextFunction): Promi
 			throw new UnauthorizedException("No such user found");
 		}
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { password, token, collegeOther, ...rest } = user;
+		const { password, otp, collegeOther, ...rest } = user;
 
 		res.status(200).send({ ...rest, college: user.collegeOther });
 	} catch (err) {
@@ -180,12 +180,17 @@ export const sendVerificationMail = async (req: Request, res: Response, next: Ne
 		if (user.verified) {
 			throw new UnauthorizedException("User already verified");
 		}
-		const token = jwt.sign({ email, type: SignType.VERIFICATION }, process.env.JWT_SECRET ?? "secret", {
-			expiresIn: "1d",
-		});
-		user.token = token;
+		// const token = jwt.sign({ email, type: SignType.VERIFICATION }, process.env.JWT_SECRET ?? "secret", {
+		// 	expiresIn: "1d",
+		// });
+		const otp = `${Math.floor(1000 + Math.random() * 9000)}`
+		const saltRounds = 10 
+		const hashedOTP = await bcrypt.hash(otp,saltRounds)
+
+		user.otp = hashedOTP;
+	    user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 		await user.save();
-		await sendVerificationEmail(email, token);
+		await sendOTPVerificationEmail(email, (user._id as mongoose.Types.ObjectId).toString());
 		res.status(200).send({ message: "Email sent" });
 	} catch (err) {
 		next(err);
@@ -194,8 +199,6 @@ export const sendVerificationMail = async (req: Request, res: Response, next: Ne
 
 export const verifyEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 	/**
-	 * Expects a query parameter with the following fields:
-	 * - token: string
 	 *
 	 * Verifies the email of the user with the given token and sets the verified flag to true.
 	 *
@@ -205,33 +208,38 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
 	 *
 	 * @returns {Promise<void>}
 	 */
-	try {
-		const { token } = req.query as Record<string, string>;
-		let decoded: Record<string, string> & { type: SignType };
-		try {
-			decoded = jwt.verify(token, process.env.JWT_SECRET ?? "secret") as Record<string, string> & {
-				type: SignType;
-			};
-		} catch (err) {
-			throw new UnauthorizedException("Invalid token");
-		}
-		if (decoded.type !== SignType.VERIFICATION) {
-			throw new UnauthorizedException("Invalid token");
-		}
-		const user = await User.findOne({ email: decoded.email });
-		if (!user) {
-			throw new UnauthorizedException("No such user found");
-		}
-		if (!user.token || user.token !== token) {
-			throw new UnauthorizedException("Invalid token");
-		}
-		user.verified = true;
-		user.token = undefined;
-		await user.save();
-		res.status(200).send({ message: "Email verified" });
-	} catch (err) {
-		next(err);
+   try {
+	const { email, otp } = req.body as Record<string, string>;
+
+	const user = await User.findOne({ email });
+
+	if (!user) throw new UnauthorizedException("No such user found");
+
+	if (!user.otp || !user.otpExpiresAt) {
+		throw new UnauthorizedException("OTP has expired");
 	}
+
+	// Check if the OTP is expired
+	if (user.otpExpiresAt.getTime() < Date.now()) {
+		user.otp = undefined;
+		user.otpExpiresAt = undefined;
+		await user.save();
+		throw new UnauthorizedException("OTP has expired");
+	}
+
+	const isMatch = await bcrypt.compare(otp, user.otp);
+	if (!isMatch) throw new UnauthorizedException("Invalid OTP");
+
+	user.verified = true;
+	user.otp = undefined;
+	user.otpExpiresAt = undefined;
+	await user.save();
+
+	res.status(200).send({ message: "Email verified successfully" });
+} catch (err) {
+	next(err);
+}
+
 };
 
 export const forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

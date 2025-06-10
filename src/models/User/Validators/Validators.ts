@@ -37,7 +37,10 @@ export const sendVerifyEmailValidator = [
 	body("email", "Email is invalid").isEmail().normalizeEmail(),
 ];
 
-export const verifyEmailValidator = [query("token", "Token is required").isString().trim().notEmpty()];
+export const verifyEmailValidator = [
+  body("email", "Email is required").isEmail().normalizeEmail(),
+  body("otp", "OTP is required").isString().trim().notEmpty(),
+];
 
 export const forgotPasswordValidator = [
 	body("email", "Email is required").notEmpty(),

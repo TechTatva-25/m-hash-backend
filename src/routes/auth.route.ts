@@ -68,7 +68,7 @@ router.post(
 router.get(
 	"/verify-email",
 	verifyEmailValidator,
-	validationMiddleware as unknown as RequestHandler,
+	//validationMiddleware as unknown as RequestHandler,
 	verifyEmail as RequestHandler
 );
 
