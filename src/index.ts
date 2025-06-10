@@ -4,6 +4,8 @@ import cors, { CorsOptions } from "cors";
 import { Server } from "node:http";
 import session from "express-session";
 import MongoStore from "connect-mongo";
+import fileUpload from "express-fileupload";
+
 import { Logger } from "./libs/logger";
 import { HttpLogger } from "./middlewares/logger.middleware";
 import { NotFoundException } from "./models/exceptions";
@@ -43,6 +45,7 @@ app.use(
 
 app.use(httpLogger.log);
 
+app.use(fileUpload({ limits: { fileSize: 10 * 1024 * 1024 } }));
 
 initRoutes(app);
 
