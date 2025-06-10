@@ -23,7 +23,6 @@ router.get(
 router.get(
   "/getWithState",
   adminRequiredMiddleware as RequestHandler,
-  getCollegeValidator,
   validationMiddleware as RequestHandler,
   getCollegesWithState as RequestHandler
 );
