@@ -1,15 +1,15 @@
 import { NextFunction, Request , Response } from "express";
 import mongoose from "mongoose";
 
-import { getFile } from "../libs/s3";
-import College from "@/models/College/college";
-import Config from "@/models/Config/config";
-import { BadRequestException,ConflictException } from "@/models/exceptions";
-import Problem from "@/models/Problem/problem";
-import Round from "@/models/Round/round";
-import Submission,{ SubmissionStatus} from "@/models/Submission/submission";
-import Team, {ITeam, JudgeScore} from "@/models/Team/team";
-import User from "@/models/User/user";
+//import { getFile } from "../libs/s3";
+import College from "../models/College/college";
+import Config from "../models/Config/config";
+import { BadRequestException,ConflictException } from "../models/exceptions";
+import Problem from "../models/Problem/problem";
+import Round from "../models/Round/round";
+import Submission,{ SubmissionStatus} from "../models/Submission/submission";
+import Team, {ITeam, JudgeScore} from "../models/Team/team";
+import User from "../models/User/user";
 
 interface Prob {
     _id: string,
@@ -66,47 +66,49 @@ export const RejectSubmissionStatus = async (req: Request, res: Response, next: 
 	}
 };
 
-export const getAllSubmissions = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
-	try {
-		const userId = _req.session.userId;
-		if (!userId) {
-			throw new Error("User ID is required");
-		}
-		const user = await User.findOne({ _id: userId });
-		const problemIds = user?.problem_statement;
+// File submission is not setup right now
 
-		const submissions = await Submission.find({ problem_id: { $in: problemIds } });
+// export const getAllSubmissions = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+// 	try {
+// 		const userId = _req.session.userId;
+// 		if (!userId) {
+// 			throw new Error("User ID is required");
+// 		}
+// 		const user = await User.findOne({ _id: userId });
+// 		const problemIds = user?.problem_statement;
 
-		for (const submission of submissions) {
-			const getFileResponse = await getFile(
-				submission.submission_file_name ? submission.submission_file_name : submission.submission_url,
-				true
-			);
+// 		const submissions = await Submission.find({ problem_id: { $in: problemIds } });
 
-			if (getFileResponse.submissionUrl) {
-				submission.submission_url = getFileResponse.submissionUrl;
-			} else {
-				submission.submission_url = "URL fetch failure";
-			}
+// 		for (const submission of submissions) {
+// 			const getFileResponse = await getFile(
+// 				submission.submission_file_name ? submission.submission_file_name : submission.submission_url,
+// 				true
+// 			);
 
-			const submission_video_file_name = submission.submission_video_file_name;
+// 			if (getFileResponse.submissionUrl) {
+// 				submission.submission_url = getFileResponse.submissionUrl;
+// 			} else {
+// 				submission.submission_url = "URL fetch failure";
+// 			}
 
-			if (submission_video_file_name) {
-				const getFileResponse = await getFile(submission.submission_video_file_name, false);
+// 			const submission_video_file_name = submission.submission_video_file_name;
 
-				if (!getFileResponse.submissionUrl) {
-					throw new BadRequestException("Submission URL fetch failure for video");
-				}
+// 			if (submission_video_file_name) {
+// 				const getFileResponse = await getFile(submission.submission_video_file_name, false);
 
-				submission.submission_video_url = getFileResponse.submissionUrl;
-			}
-		}
+// 				if (!getFileResponse.submissionUrl) {
+// 					throw new BadRequestException("Submission URL fetch failure for video");
+// 				}
 
-		res.status(200).json(submissions);
-	} catch (error) {
-		next(error);
-	}
-};
+// 				submission.submission_video_url = getFileResponse.submissionUrl;
+// 			}
+// 		}
+
+// 		res.status(200).json(submissions);
+// 	} catch (error) {
+// 		next(error);
+// 	}
+// };
 
 export const getTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 	try {
@@ -245,15 +247,22 @@ export const getAllApprovedTeams = async (_req: Request, res: Response): Promise
 		const approvedTeams = await Team.find({
 			_id: { $in: submissions.map((submission) => submission.team_id) },
 		}).lean();
+		//console.log(approvedTeams)
 
 		const approvedTeamsWithProblemDetails = await Promise.all(
 			approvedTeams.map(async (team) => {
 				const problem = await Submission.aggregate([
-					{ $match: { team_id: team._id } },
+					{
+		                $addFields: {
+							team_id_obj: { $toObjectId: "$team_id" },
+			                problem_id_obj: { $toObjectId: "$problem_id" }
+		                }
+	                },
+					{ $match: { team_id_obj: team._id } },
 					{
 						$lookup: {
 							from: "problems",
-							localField: "problem_id",
+							localField: "problem_id_obj",
 							foreignField: "_id",
 							as: "joined_data",
 						},
@@ -270,11 +279,13 @@ export const getAllApprovedTeams = async (_req: Request, res: Response): Promise
 					},
 				]);
 
+				const prob = (problem as unknown as Prob[])[0];
+
 				return {
 					...team,
-					problemId: (problem as unknown as Prob[])[0]._id,
-					problemTitle: (problem as unknown as Prob[])[0].title,
-					sdg_id: (problem as unknown as Prob[])[0].sdg_id,
+					problemId: prob?._id ?? null,
+			        problemTitle: prob?.title ?? "Not Found",
+			        sdg_id: prob?.sdg_id ?? null,
 				};
 			})
 		);
@@ -386,8 +397,13 @@ export const getMyProblems = async (req: Request, res: Response): Promise<void> 
 			throw new Error("User ID is required");
 		}
 		const user = await User.findOne({ _id: userId });
-		const problemId = user?.problem_statement;
-		const problems = await Problem.find({ _id: { $in: problemId } });
+		console.log(user)
+		if (!user?.problem_statement || !Array.isArray(user.problem_statement)) {
+			res.status(200).json([]);
+			return;
+		}
+		const problemIds = user.problem_statement.map(id => new mongoose.Types.ObjectId(id));
+		const problems = await Problem.find({ _id: { $in: problemIds } });
 		res.status(200).json(problems);
 	} catch (error) {
 		res.status(500).json({ error });

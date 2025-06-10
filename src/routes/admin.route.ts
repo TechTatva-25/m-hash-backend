@@ -4,14 +4,14 @@ import rateLimiter from "express-rate-limit";
 import {
   adminRequiredMiddleware,
   validationMiddleware,
-} from "@/middlewares/auth.middleware";
-import { TooManyRequestsException } from "@/models/exceptions";
+} from "../middlewares/auth.middleware";
+import { TooManyRequestsException } from "../models/exceptions";
 import {
   sendTeamMail,
   AdmingetProgress,
   makeJudge,
-  deleteTeam,
-  getAllSubmissions,
+  //deleteTeam,
+  //getAllSubmissions,
   adminApprove,
   adminReject,
   getAdminStats,
@@ -19,11 +19,11 @@ import {
   assignProblem,
   deassignProblem,
   getTeamJudgeMapping  
-} from "@/controllers/admin.controller";
-import { getTeam, getProb } from "@/controllers/judge.controller";
+} from "../controllers/admin.controller";
+import { getTeam, getProb } from "../controllers/judge.controller";
 
-import { getProgressValidator } from "@/models/Stage/validators/validator";
-import { makeJudgeValidator } from "@/models/User/Validators/Validators";
+import { getProgressValidator } from "../models/Stage/validators/validator";
+import { makeJudgeValidator } from "../models/User/Validators/Validators";
 
 const router = express.Router();
 
@@ -53,9 +53,9 @@ router.post(
   makeJudge as RequestHandler
 );
 
-router.post("/delete-team", deleteTeam as RequestHandler);
+//router.post("/delete-team", deleteTeam as RequestHandler);
 
-router.get("/submissions", getAllSubmissions as RequestHandler);
+//router.get("/submissions", getAllSubmissions as RequestHandler);
 
 router.post("/admin-approve", adminApprove as RequestHandler);
 

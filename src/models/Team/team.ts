@@ -59,7 +59,7 @@ const TeamSchema: Schema<ITeam> = new Schema<ITeam>(
 		members: [{ type: Schema.Types.ObjectId, ref: "User" }],
 		team_leader: { type: Schema.Types.ObjectId, ref: "User" },
 		college: { type: Schema.Types.ObjectId, ref: "College" },
-		collegeOther: { type: String, required: true },
+		collegeOther: { type: String, required: false },
 		bugs: { type: [BugRecordSchema], required: true },
 		judge_score: { type: [JudgeScoreSchema], default: [] },
 		deployed: { type: Boolean, default: false },

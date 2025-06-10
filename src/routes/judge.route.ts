@@ -1,6 +1,6 @@
 import express, { RequestHandler } from "express";
 
-import { judgeRequiredMiddleware } from "@/middlewares/auth.middleware";
+import { judgeRequiredMiddleware } from "../middlewares/auth.middleware";
 import {
   updateSubmissionStatus,
   RejectSubmissionStatus,
@@ -14,7 +14,7 @@ import {
   updateTeamDeployStatus,
   getAverageDenominatorConfig,
   getMyProblems,
-} from "@/controllers/judge.controller";
+} from "../controllers/judge.controller";
 const router = express.Router();
 
 router.use(judgeRequiredMiddleware as RequestHandler);
