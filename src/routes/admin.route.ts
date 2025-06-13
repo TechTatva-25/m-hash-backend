@@ -18,7 +18,8 @@ import {
   getAllJudges,
   assignProblem,
   deassignProblem,
-  getTeamJudgeMapping  
+  getTeamJudgeMapping,
+  exportSubmissionsToExcel 
 } from "../controllers/admin.controller";
 import { getTeam, getProb } from "../controllers/judge.controller";
 
@@ -74,6 +75,8 @@ router.post("/assign-problem", assignProblem as RequestHandler);
 router.post("/de-assign-problem", deassignProblem as RequestHandler);
 
 router.get("/getTeamJudgeMapping", getTeamJudgeMapping as RequestHandler);
+
+router.get("/submissions/export", exportSubmissionsToExcel as RequestHandler);
 
 
 

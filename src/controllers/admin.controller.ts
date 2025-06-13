@@ -9,6 +9,7 @@ import Progress from "../models/Progress/progress";
 import Submission, {SubmissionStatus} from "../models/Submission/submission";
 //import { deleteFile, getFile } from "../libs/s3";
 import Stage,{Stages} from "../models/Stage/stage";
+import ExcelJS from "exceljs";
 
 
 // for cloudinary
@@ -519,6 +520,60 @@ export const getTeamJudgeMapping = async (_req: Request, res: Response, next: Ne
 		next(error);
 	}
 };
+
+export const exportSubmissionsToExcel = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+	const submissions = await Submission.find({})
+	  .populate<{ team_id: { name: string }, problem_id: { title: string, sdg_id: string, sdg_title: string } }>("team_id", "name")
+	  .populate<{ problem_id: { title: string, sdg_id: string, sdg_title: string } }>("problem_id", "title sdg_id sdg_title");
+
+	const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Submissions");
+
+    // Define headers
+    worksheet.columns = [
+      { header: "Team Name", key: "teamName", width: 25 },
+      { header: "Problem Title", key: "problemTitle", width: 30 },
+      { header: "SDG ID", key: "sdgId", width: 10 },
+      { header: "SDG Title", key: "sdgTitle", width: 30 },
+      { header: "PPT URL", key: "pptUrl", width: 50 },
+      { header: "Video URL", key: "videoUrl", width: 50 },
+      { header: "Status", key: "status", width: 20 },
+    ];
+
+    for (const submission of submissions) {
+      worksheet.addRow({
+        teamName: submission.team_id?.name || "N/A",
+        problemTitle: submission.problem_id?.title || "N/A",
+        sdgId: submission.problem_id?.sdg_id || "N/A",
+        sdgTitle: submission.problem_id?.sdg_title || "N/A",
+        pptUrl: submission.submission_url || "N/A",
+        videoUrl: submission.submission_video_url || "N/A",
+        status: submission.status || "N/A",
+      });
+    }
+
+    // Set headers
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=submissions.xlsx"
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 
 
