@@ -14,7 +14,7 @@ import {
 import { TooManyRequestsException } from "../models/exceptions";
 import {
   createSubmissionValidator,
-  deleteSubmissionValidator,
+  //deleteSubmissionValidator,
 } from "../models/Submission/validators/validator";
 import {
   createTeam,
@@ -85,7 +85,7 @@ router.post(
 
 router.delete(
   "/delete-submission",
-  deleteSubmissionValidator,
+  //deleteSubmissionValidator,
   validationMiddleware as RequestHandler,
   deleteSubmission as RequestHandler
 );

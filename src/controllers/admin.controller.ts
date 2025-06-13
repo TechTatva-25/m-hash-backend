@@ -11,6 +11,16 @@ import Submission, {SubmissionStatus} from "../models/Submission/submission";
 import Stage,{Stages} from "../models/Stage/stage";
 
 
+// for cloudinary
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+
 const emailHtml = (content: string): string => `
     <html>
     <body>
@@ -95,68 +105,95 @@ export const makeJudge = async (req: Request, res: Response, next: NextFunction)
 	}
 };
 
-// Commenetd as file submission is not setup
+export const deleteTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+	try {
+		const { teamId } = req.body as Record<string, string>;
+		const team = await Team.findByIdAndDelete(teamId);
+		if (!team) {
+			throw new Error("Team not found");
+		}
 
-// export const deleteTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-// 	try {
-// 		const { teamId } = req.body as Record<string, string>;
-// 		const team = await Team.findByIdAndDelete(teamId);
-// 		if (!team) {
-// 			throw new Error("Team not found");
-// 		}
+		const submission = await Submission.findOne({ team_id: team._id });
+		if (submission) {
+			// const file_name = submission.submission_file_name;
+			// const response = await deleteFile(file_name, true);
+			// if (!response) {
+			// 	throw new BadRequestException(`Error deleting submission PPT: ${file_name}}`);
+			// }
 
-// 		const submission = await Submission.findOne({ team_id: team._id });
-// 		if (submission) {
-// 			const file_name = submission.submission_file_name;
-// 			const response = await deleteFile(file_name, true);
-// 			if (!response) {
-// 				throw new BadRequestException(`Error deleting submission PPT: ${file_name}}`);
-// 			}
+			// await Submission.findByIdAndDelete(submission._id);
+			// Delete PPT
+			if (submission.submission_url?.includes("cloudinary")) {
+				const pptPublicId = extractPublicId(submission.submission_url);
+				const result = await cloudinary.uploader.destroy(pptPublicId, { resource_type: "raw" });
+				console.log("PPT Delete result:", result);
+			}
 
-// 			await Submission.findByIdAndDelete(submission._id);
-// 		}
+			// Delete Video
+			if (submission.submission_video_url?.includes("cloudinary")) {
+				  const videoPublicId = extractPublicId(submission.submission_video_url);
+				  console.log(videoPublicId)
+				  const resultVideo = await cloudinary.uploader.destroy(videoPublicId, {
+					resource_type: "video",
+					invalidate: true,
+				  });
+				  console.log("Video Delete result:", resultVideo);
+			}
 
-// 		res.status(200).send("Team deleted successfully");
-// 	} catch (error) {
-// 		next(error);
-// 	}
-// };
+			await Submission.findByIdAndDelete(submission._id);
+		}
 
-// export const getAllSubmissions = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
-// 	try {
-// 		const submissions = await Submission.find({})
-// 			.populate("team_id", "name")
-// 			.populate("problem_id", "title sdg_id sdg_title");
-// 		for (const submission of submissions) {
-// 			const getFileResponse = await getFile(
-// 				submission.submission_file_name ? submission.submission_file_name : submission.submission_url,
-// 				true
-// 			);
+		res.status(200).send("Team deleted successfully");
+	} catch (error) {
+		next(error);
+	}
+};
 
-// 			if (getFileResponse.submissionUrl) {
-// 				submission.submission_url = getFileResponse.submissionUrl;
-// 			} else {
-// 				submission.submission_url = "URL fetch failure";
-// 			}
+export const getAllSubmissions = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+	try {
+		const submissions = await Submission.find({})
+			.populate("team_id", "name")
+			.populate("problem_id", "title sdg_id sdg_title");
+		// for (const submission of submissions) {
+		// 	const getFileResponse = await getFile(
+		// 		submission.submission_file_name ? submission.submission_file_name : submission.submission_url,
+		// 		true
+		// 	);
 
-// 			const submission_video_file_name = submission.submission_video_file_name;
+		// 	if (getFileResponse.submissionUrl) {
+		// 		submission.submission_url = getFileResponse.submissionUrl;
+		// 	} else {
+		// 		submission.submission_url = "URL fetch failure";
+		// 	}
 
-// 			if (submission_video_file_name) {
-// 				const getFileResponse = await getFile(submission.submission_video_file_name, false);
+		// 	const submission_video_file_name = submission.submission_video_file_name;
 
-// 				if (!getFileResponse.submissionUrl) {
-// 					throw new BadRequestException("Submission URL fetch failure for video");
-// 				}
+		// 	if (submission_video_file_name) {
+		// 		const getFileResponse = await getFile(submission.submission_video_file_name, false);
 
-// 				submission.submission_video_url = getFileResponse.submissionUrl;
-// 			}
-// 		}
+		// 		if (!getFileResponse.submissionUrl) {
+		// 			throw new BadRequestException("Submission URL fetch failure for video");
+		// 		}
 
-// 		res.status(200).json(submissions);
-// 	} catch (error) {
-// 		next(error);
-// 	}
-// };
+		// 		submission.submission_video_url = getFileResponse.submissionUrl;
+		// 	}
+		// }
+
+		for (const submission of submissions) {
+			if (!submission.submission_url) {
+				submission.submission_url = "PPT URL not available";
+			}
+
+			if (!submission.submission_video_url) {
+				submission.submission_video_url = "Video URL not available";
+			}
+		}
+
+		res.status(200).json(submissions);
+	} catch (error) {
+		next(error);
+	}
+};
 
 export const adminApprove = async (req: Request, res: Response): Promise<void> => {
 	try {
@@ -481,4 +518,10 @@ export const getTeamJudgeMapping = async (_req: Request, res: Response, next: Ne
 	} catch (error) {
 		next(error);
 	}
+};
+
+
+
+export const extractPublicId = (url: string): string => {
+  return decodeURIComponent(url.split("/").slice(7).join("/"));
 };

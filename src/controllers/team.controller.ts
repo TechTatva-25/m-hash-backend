@@ -16,6 +16,17 @@ import Stage, { Stages } from "../models/Stage/stage";
 import Problem from "../models/Problem/problem";
 import RuntimeConfig from "../models/Config/config";
 
+import { v2 as cloudinary } from 'cloudinary';
+import streamifier from 'streamifier';
+import fileUpload from "express-fileupload";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+
 export const getTeam = async (
   req: Request,
   res: Response,
@@ -320,8 +331,7 @@ export const makeSubmission = async (
       throw new BadRequestException("Submission already exists");
     }
 
-    const { problem_id } = req.body as { problem_id: string };
-    const { video_url } = req.body as { video_url: string };
+    const { problem_id, video_url } = req.body;
 
     const problem = await Problem.findById(problem_id);
     if (!problem) {
@@ -335,13 +345,13 @@ export const makeSubmission = async (
 
     const file_name = `${problem_id}_${(team._id as Types.ObjectId).toString()}_${file.name.trim()}`;
 
-    // TODO: AWS S3 configuration and uncoment the following code block
+    // // TODO: AWS S3 configuration and uncoment the following code block
     // const response = await putFile(file_name, file.data, true);
     // if (!response) {
     //   throw new BadRequestException("Error uploading PPT");
     // }
 
-    // ---- Video Submission ----
+    // // ---- Video Submission ----
     // const video = req.files?.video as fileUpload.UploadedFile | undefined;
     // if (video) {
     //  const video_file_name = `${problem_id}_${(team._id as mongoose.Types.ObjectId).toString()}_${video.name}`;
@@ -350,30 +360,26 @@ export const makeSubmission = async (
     //      throw new BadRequestException("Error uploading video");
     //  }
 
-    //  const submission = new Submission({
-    //      problem_id: problem._id,
-    //      team_id: team._id,
-    //      submission_file_name: file_name,
-    //      submission_video_file_name: video_file_name,
-    //  });
-    //  await submission.save();
-    // } else {
-    //  const submission = new Submission({
-    //      problem_id: problem._id,
-    //      team_id: team._id,
-    //      submission_file_name: file_name,
-    //  });
-    //  await submission.save();
-    // }
+    const pptUrl = await uploadToCloudinary(file.data, file_name, 'submissions');
 
-    const submission = new Submission({
+    const video = req.files?.video as fileUpload.UploadedFile | undefined;
+    let videoUrl = video_url;
+    if (video) {
+      const originalVideoName = video.name.replace(/\s+/g, "_").replace(/(\.mp4)+$/i, "");
+      const video_file_name = `${problem_id}_${team._id}_${originalVideoName}`;
+      videoUrl = await uploadToCloudinary(video.data, video_file_name, 'videos');
+    }
+
+     const submission = new Submission({
       problem_id: problem._id,
       team_id: team._id,
-      submission_file_name: file_name,
-      submission_video_url: video_url,
+      submission_file_name: file.name.trim(),
+      submission_url: pptUrl,
+      submission_video_url: videoUrl,
     });
-    await submission.save();
 
+     await submission.save();
+    
     res.status(201).json({ message: "Submission created successfully" });
   } catch (error) {
     next(error);
@@ -398,14 +404,14 @@ export const deleteSubmission = async (
       throw new BadRequestException("Submission not found");
     }
 
-    // const submission_team = await Team.findById(submission.team_id);
-    // if (!submission_team) {
-    //  throw new BadRequestException("Submission team not found");
-    // }
+    const submission_team = await Team.findById(submission.team_id);
+    if (!submission_team) {
+     throw new BadRequestException("Submission team not found");
+    }
 
-    // if (submission_team.team_leader.toString() !== req.session.userId) {
-    //  throw new BadRequestException("Only team leader can delete submissions");
-    // }
+    if (submission_team.team_leader.toString() !== req.session.userId) {
+     throw new BadRequestException("Only team leader can delete submissions");
+    }
 
     // const file_name = submission.submission_file_name;
 
@@ -423,6 +429,25 @@ export const deleteSubmission = async (
     // if (!response2) {
     //     throw new BadRequestException(`Error deleting submission video: ${submission_video_file_name}}`);
     // }
+
+    // Delete PPT from Cloudinary
+    const pptPublicId = extractPublicId(submission.submission_url);
+    const result = await cloudinary.uploader.destroy(pptPublicId, {
+      resource_type: 'raw',
+      invalidate: true,
+    });
+    console.log("Delete result:", result);
+
+    // Delete video from Cloudinary if it's a URL (not a manual link)
+    if (submission.submission_video_url?.includes("cloudinary")) {
+      const videoPublicId = extractPublicId(submission.submission_video_url);
+      console.log(videoPublicId)
+      const resultVideo = await cloudinary.uploader.destroy(videoPublicId, {
+        resource_type: "video",
+        invalidate: true,
+      });
+      console.log("Video Delete result:", resultVideo);
+    }
 
     await Submission.findByIdAndDelete(submission._id);
 
@@ -563,3 +588,30 @@ const buildTeamResponse = async (
     progress,
   };
 };
+
+function uploadToCloudinary(buffer: Buffer, publicId: string, folder: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        public_id: publicId,
+        folder,
+        resource_type: "auto",
+      },
+      (error, result) => {
+        if (error || !result) {
+          return reject(error);
+        }
+        resolve(result.secure_url);
+      }
+    );
+
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+}
+
+export const extractPublicId = (url: string): string => {
+  return decodeURIComponent(url.split("/").slice(7).join("/"));
+};
+
+
+

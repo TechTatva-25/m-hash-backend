@@ -10,8 +10,8 @@ import {
   sendTeamMail,
   AdmingetProgress,
   makeJudge,
-  //deleteTeam,
-  //getAllSubmissions,
+  deleteTeam,
+  getAllSubmissions,
   adminApprove,
   adminReject,
   getAdminStats,
@@ -53,9 +53,9 @@ router.post(
   makeJudge as RequestHandler
 );
 
-//router.post("/delete-team", deleteTeam as RequestHandler);
+router.post("/delete-team", deleteTeam as RequestHandler);
 
-//router.get("/submissions", getAllSubmissions as RequestHandler);
+router.get("/submissions", getAllSubmissions as RequestHandler);
 
 router.post("/admin-approve", adminApprove as RequestHandler);
 
