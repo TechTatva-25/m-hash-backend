@@ -545,6 +545,9 @@ const buildTeamResponse = async (
   }
 
   const scrubMember = (member: IUser) => {
+    // Skip null members
+    if (!member) return null;
+
     const {
       password,
       token,
@@ -565,7 +568,8 @@ const buildTeamResponse = async (
 
   const teamLeader = team.team_leader as unknown as IUser;
 
-  const safeTeamLeader = {
+  // Handle case where team leader is null
+  const safeTeamLeader = teamLeader ? {
     _id: teamLeader._id,
     username: teamLeader.username,
     college: team.collegeOther,
@@ -575,12 +579,15 @@ const buildTeamResponse = async (
           mobile_number: teamLeader.mobile_number,
         }
       : {}),
-  };
+  } : null;
 
   return {
     _id: team._id,
     name: team.name,
-    members: (team.members as unknown as IUser[]).map(scrubMember),
+    members: (team.members as unknown as IUser[])
+      .filter(member => member !== null) // Filter out null members
+      .map(scrubMember)
+      .filter(member => member !== null), // Filter out any members that were converted to null
     team_leader: safeTeamLeader,
     college: team.collegeOther,
     createdAt: team.createdAt,
@@ -612,6 +619,3 @@ function uploadToCloudinary(buffer: Buffer, publicId: string, folder: string): P
 export const extractPublicId = (url: string): string => {
   return decodeURIComponent(url.split("/").slice(7).join("/"));
 };
-
-
-

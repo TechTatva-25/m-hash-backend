@@ -65,10 +65,10 @@ router.post(
 	sendVerificationMail as RequestHandler
 );
 
-router.get(
+router.post(
 	"/verify-email",
 	verifyEmailValidator,
-	//validationMiddleware as unknown as RequestHandler,
+	validationMiddleware as unknown as RequestHandler,
 	verifyEmail as RequestHandler
 );
 

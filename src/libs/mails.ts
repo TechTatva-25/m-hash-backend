@@ -53,23 +53,30 @@ export const transporter = SMTPTransport.createTransport({
 
 export const sendOTPVerificationEmail = async (email: string, _id: string): Promise<void> => {
 	try {
-		const otp = `${Math.floor(1000 + Math.random() * 9000)}`; // 4-digit OTP
+		// Generate a 4-digit OTP
+		const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
 
+		// Hash the OTP for secure storage
+		const saltRounds = 10;
+		const hashedOTP = await bcrypt.hash(otp, saltRounds);
+
+		// Set OTP and expiry (10 mins from now)
+		const result = await user.findByIdAndUpdate(_id, {
+			otp: hashedOTP,
+			otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+		});
+
+		if (!result) {
+			throw new Error("User not found");
+		}
+
+		// Send email with the plain text OTP
 		const mailOptions = {
 			from: process.env.EMAIL_USER,
 			to: email,
 			subject: "Email Verification",
 			html: await verifyEmailHtml(otp),
 		};
-
-		const saltRounds = 10;
-		const hashedOTP = await bcrypt.hash(otp, saltRounds);
-
-		// Set OTP and expiry (10 mins from now)
-		await user.findByIdAndUpdate(_id, {
-			otp: hashedOTP,
-			otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
-		});
 
 		await transporter.sendMail(mailOptions);
 	} catch (error) {

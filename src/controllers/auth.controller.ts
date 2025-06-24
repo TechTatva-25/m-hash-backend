@@ -180,18 +180,10 @@ export const sendVerificationMail = async (req: Request, res: Response, next: Ne
 		if (user.verified) {
 			throw new UnauthorizedException("User already verified");
 		}
-		// const token = jwt.sign({ email, type: SignType.VERIFICATION }, process.env.JWT_SECRET ?? "secret", {
-		// 	expiresIn: "1d",
-		// });
-		const otp = `${Math.floor(1000 + Math.random() * 9000)}`
-		const saltRounds = 10 
-		const hashedOTP = await bcrypt.hash(otp,saltRounds)
 
-		user.otp = hashedOTP;
-	    user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
-		await user.save();
+		// Use the centralized OTP generation and email sending function
 		await sendOTPVerificationEmail(email, (user._id as mongoose.Types.ObjectId).toString());
-		res.status(200).send({ message: "Email sent" });
+		res.status(200).send({ message: "Verification email sent" });
 	} catch (err) {
 		next(err);
 	}
@@ -200,7 +192,7 @@ export const sendVerificationMail = async (req: Request, res: Response, next: Ne
 export const verifyEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 	/**
 	 *
-	 * Verifies the email of the user with the given token and sets the verified flag to true.
+	 * Verifies the email of the user with the given OTP and sets the verified flag to true.
 	 *
 	 * @param {Request} req - Express request object
 	 * @param {Response} res - Express response object
@@ -211,12 +203,20 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
    try {
 	const { email, otp } = req.body as Record<string, string>;
 
+	if (!email || !otp) {
+		throw new BadRequestException("Email and OTP are required");
+	}
+
 	const user = await User.findOne({ email });
 
 	if (!user) throw new UnauthorizedException("No such user found");
 
+	if (user.verified) {
+		return res.status(200).send({ message: "Email already verified" });
+	}
+
 	if (!user.otp || !user.otpExpiresAt) {
-		throw new UnauthorizedException("OTP has expired");
+		throw new UnauthorizedException("No OTP found. Please request a new verification code");
 	}
 
 	// Check if the OTP is expired
@@ -224,22 +224,23 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
 		user.otp = undefined;
 		user.otpExpiresAt = undefined;
 		await user.save();
-		throw new UnauthorizedException("OTP has expired");
+		throw new UnauthorizedException("OTP has expired. Please request a new verification code");
 	}
 
+	// Verify the OTP
 	const isMatch = await bcrypt.compare(otp, user.otp);
-	if (!isMatch) throw new UnauthorizedException("Invalid OTP");
+	if (!isMatch) throw new UnauthorizedException("Invalid OTP. Please check and try again");
 
+	// Mark user as verified and clear OTP data
 	user.verified = true;
 	user.otp = undefined;
 	user.otpExpiresAt = undefined;
 	await user.save();
 
 	res.status(200).send({ message: "Email verified successfully" });
-} catch (err) {
+   } catch (err) {
 	next(err);
-}
-
+   }
 };
 
 export const forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

@@ -22,6 +22,7 @@ const httpLogger = new HttpLogger(logger);
 const corsOptions: CorsOptions = {
   origin: process.env.CLIENT_URL ?? "http://localhost:3000",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"], // Allowed HTTP methods
+  credentials: true, // Allow credentials (cookies, sessions) to be sent with requests
 };
 app.use(cors(corsOptions));
 
@@ -39,6 +40,7 @@ app.use(
       maxAge: 1000 * 60 * 60, // 1 hour
       httpOnly: true,
       secure: false, // true if HTTPS in prod
+      sameSite: 'lax' // allows the cookie to be sent in cross-origin requests
     },
   })
 );
