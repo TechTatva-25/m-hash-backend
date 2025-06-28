@@ -2,6 +2,9 @@ import "dotenv/config";
 import express, { RequestHandler } from "express";
 import cors, { CorsOptions } from "cors";
 import { Server } from "node:http";
+import session from "express-session";
+import MongoStore from "connect-mongo";
+import fileUpload from "express-fileupload";
 
 import { Logger } from "./libs/logger";
 import { HttpLogger } from "./middlewares/logger.middleware";
@@ -19,11 +22,32 @@ const httpLogger = new HttpLogger(logger);
 const corsOptions: CorsOptions = {
   origin: process.env.CLIENT_URL ?? "http://localhost:3000",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"], // Allowed HTTP methods
+  credentials: true, // Allow credentials (cookies, sessions) to be sent with requests
 };
 app.use(cors(corsOptions));
 
 app.use(express.json());
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "defaultsecret",
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_DB_URI || "mongodb://localhost:27017/yourdb",
+    }),
+    cookie: {
+      maxAge: 1000 * 60 * 60, // 1 hour
+      httpOnly: true,
+      secure: false, // true if HTTPS in prod
+      sameSite: 'lax' // allows the cookie to be sent in cross-origin requests
+    },
+  })
+);
+
 app.use(httpLogger.log);
+
+app.use(fileUpload({ limits: { fileSize: 10 * 1024 * 1024 } }));
 
 initRoutes(app);
 
