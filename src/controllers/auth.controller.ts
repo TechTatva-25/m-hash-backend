@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import axios from "axios";
 
 import { sendForgotPasswordEmail, sendOTPVerificationEmail, SignType } from "../libs/mails";
 import College from "../models/College/college";
@@ -43,10 +44,35 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 	 * @returns {Promise<void>}
 	 */
 	try {
-		const { email, username, password, mobile_number, college, collegeOther, gender } = req.body as Record<
+		const { email, username, password, mobile_number, college, collegeOther, gender, turnstileToken } = req.body as Record<
 			string,
 			string
 		>;
+
+				if (!turnstileToken) {
+			throw new BadRequestException("CAPTCHA verification failed. Please try again.");
+		}
+		const secret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
+		if (!secret) {
+			throw new Error("Cloudflare Turnstile secret key not set in environment variables.");
+		}
+		try {
+			const params = new URLSearchParams({
+				secret,
+				response: turnstileToken,
+				remoteip: req.ip || "",
+			});
+			const verifyRes = await axios.post(
+				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
+				params,
+				{ headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+			);
+			if (!verifyRes.data.success) {
+				throw new BadRequestException("CAPTCHA verification failed. Please try again.");
+			}
+		} catch (err) {
+			return next(new BadRequestException("CAPTCHA verification failed. Please try again."));
+		}
 
 		// const token = jwt.sign({ email, type: SignType.VERIFICATION }, process.env.JWT_SECRET ?? "secret", {
 		// 	expiresIn: "1d",
@@ -62,7 +88,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 			mobile_number,
 			college,
 			collegeOther: collegeName,
-			gender
+			gender,
 		}) as mongoose.Document & { _id: mongoose.Types.ObjectId };
 		await user.save();
 		// await sendVerificationEmail(email, token);
@@ -91,7 +117,33 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 		if (req.session.userId) {
 			throw new UnauthorizedException("Already logged in");
 		}
-		const { email, password } = req.body as Record<string, string>;
+		const { email, password, turnstileToken } = req.body as Record<string, string>;
+		if (!turnstileToken) {
+			throw new BadRequestException("CAPTCHA verification failed. Please try again.");
+		}
+		const secret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
+		if (!secret) {
+  throw new Error("Cloudflare Turnstile secret key not set in environment variables.");
+}
+		try {
+  const params = new URLSearchParams({
+    secret, // guaranteed string
+    response: turnstileToken, // guaranteed string
+    remoteip: req.ip || "", // always a string
+  });
+
+  const verifyRes = await axios.post(
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    params,
+    { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+  );
+
+  if (!verifyRes.data.success) {
+    throw new BadRequestException("CAPTCHA verification failed. Please try again.");
+  }
+} catch (err) {
+  return next(new BadRequestException("CAPTCHA verification failed. Please try again."));
+}
 		const user = await User.findOne({ email });
 		if (!user) {
 			throw new UnauthorizedException("No such user found");
