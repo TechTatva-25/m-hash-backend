@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import axios from "axios";
 
 import { sendForgotPasswordEmail, sendOTPVerificationEmail, SignType } from "../libs/mails";
 import College from "../models/College/college";
@@ -43,10 +44,35 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 	 * @returns {Promise<void>}
 	 */
 	try {
-		const { email, username, password, mobile_number, college, collegeOther, gender } = req.body as Record<
+		const { email, username, password, mobile_number, college, collegeOther, gender, turnstileToken } = req.body as Record<
 			string,
 			string
 		>;
+
+				if (!turnstileToken) {
+			throw new BadRequestException("CAPTCHA verification failed. Please try again.");
+		}
+		const secret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
+		if (!secret) {
+			throw new Error("Cloudflare Turnstile secret key not set in environment variables.");
+		}
+		try {
+			const params = new URLSearchParams({
+				secret,
+				response: turnstileToken,
+				remoteip: req.ip || "",
+			});
+			const verifyRes = await axios.post(
+				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
+				params,
+				{ headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+			);
+			if (!verifyRes.data.success) {
+				throw new BadRequestException("CAPTCHA verification failed. Please try again.");
+			}
+		} catch (err) {
+			return next(new BadRequestException("CAPTCHA verification failed. Please try again."));
+		}
 
 		// const token = jwt.sign({ email, type: SignType.VERIFICATION }, process.env.JWT_SECRET ?? "secret", {
 		// 	expiresIn: "1d",
@@ -62,7 +88,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 			mobile_number,
 			college,
 			collegeOther: collegeName,
-			gender
+			gender,
 		}) as mongoose.Document & { _id: mongoose.Types.ObjectId };
 		await user.save();
 		// await sendVerificationEmail(email, token);
@@ -91,7 +117,33 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 		if (req.session.userId) {
 			throw new UnauthorizedException("Already logged in");
 		}
-		const { email, password } = req.body as Record<string, string>;
+		const { email, password, turnstileToken } = req.body as Record<string, string>;
+		if (!turnstileToken) {
+			throw new BadRequestException("CAPTCHA verification failed. Please try again.");
+		}
+		const secret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
+		if (!secret) {
+  throw new Error("Cloudflare Turnstile secret key not set in environment variables.");
+}
+		try {
+  const params = new URLSearchParams({
+    secret, // guaranteed string
+    response: turnstileToken, // guaranteed string
+    remoteip: req.ip || "", // always a string
+  });
+
+  const verifyRes = await axios.post(
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    params,
+    { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+  );
+
+  if (!verifyRes.data.success) {
+    throw new BadRequestException("CAPTCHA verification failed. Please try again.");
+  }
+} catch (err) {
+  return next(new BadRequestException("CAPTCHA verification failed. Please try again."));
+}
 		const user = await User.findOne({ email });
 		if (!user) {
 			throw new UnauthorizedException("No such user found");
@@ -180,18 +232,10 @@ export const sendVerificationMail = async (req: Request, res: Response, next: Ne
 		if (user.verified) {
 			throw new UnauthorizedException("User already verified");
 		}
-		// const token = jwt.sign({ email, type: SignType.VERIFICATION }, process.env.JWT_SECRET ?? "secret", {
-		// 	expiresIn: "1d",
-		// });
-		const otp = `${Math.floor(1000 + Math.random() * 9000)}`
-		const saltRounds = 10 
-		const hashedOTP = await bcrypt.hash(otp,saltRounds)
 
-		user.otp = hashedOTP;
-	    user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
-		await user.save();
+		// Use the centralized OTP generation and email sending function
 		await sendOTPVerificationEmail(email, (user._id as mongoose.Types.ObjectId).toString());
-		res.status(200).send({ message: "Email sent" });
+		res.status(200).send({ message: "Verification email sent" });
 	} catch (err) {
 		next(err);
 	}
@@ -200,7 +244,7 @@ export const sendVerificationMail = async (req: Request, res: Response, next: Ne
 export const verifyEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 	/**
 	 *
-	 * Verifies the email of the user with the given token and sets the verified flag to true.
+	 * Verifies the email of the user with the given OTP and sets the verified flag to true.
 	 *
 	 * @param {Request} req - Express request object
 	 * @param {Response} res - Express response object
@@ -211,12 +255,20 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
    try {
 	const { email, otp } = req.body as Record<string, string>;
 
+	if (!email || !otp) {
+		throw new BadRequestException("Email and OTP are required");
+	}
+
 	const user = await User.findOne({ email });
 
 	if (!user) throw new UnauthorizedException("No such user found");
 
+	if (user.verified) {
+		return res.status(200).send({ message: "Email already verified" });
+	}
+
 	if (!user.otp || !user.otpExpiresAt) {
-		throw new UnauthorizedException("OTP has expired");
+		throw new UnauthorizedException("No OTP found. Please request a new verification code");
 	}
 
 	// Check if the OTP is expired
@@ -224,22 +276,23 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
 		user.otp = undefined;
 		user.otpExpiresAt = undefined;
 		await user.save();
-		throw new UnauthorizedException("OTP has expired");
+		throw new UnauthorizedException("OTP has expired. Please request a new verification code");
 	}
 
+	// Verify the OTP
 	const isMatch = await bcrypt.compare(otp, user.otp);
-	if (!isMatch) throw new UnauthorizedException("Invalid OTP");
+	if (!isMatch) throw new UnauthorizedException("Invalid OTP. Please check and try again");
 
+	// Mark user as verified and clear OTP data
 	user.verified = true;
 	user.otp = undefined;
 	user.otpExpiresAt = undefined;
 	await user.save();
 
 	res.status(200).send({ message: "Email verified successfully" });
-} catch (err) {
+   } catch (err) {
 	next(err);
-}
-
+   }
 };
 
 export const forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
