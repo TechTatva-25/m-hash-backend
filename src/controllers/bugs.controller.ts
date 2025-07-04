@@ -60,19 +60,19 @@ export const editBugReport = async (req: Request, res: Response, next: NextFunct
   const updates = req.body;
 
   try {
-    // Fetch the original bug
+    
     const originalBug = await Bug.findById(id);
     if (!originalBug) return res.status(404).json({ error: "Bug not found" });
 
-    // Determine new values (fall back to old if not provided)
+    
     const newCategory = updates.category ?? originalBug.category;
     const newStatus = updates.status ?? originalBug.status;
 
-    // Determine new points
+    
     let newPoints = updates.points_awarded;
     if (newPoints === undefined) {
       if (updates.category) {
-        // If category is changing, get new default points
+        // If there is a change in category, points will change which needs to be fetched
         const bugType = await BugType.findOne({ name: newCategory });
         if (!bugType) return res.status(400).json({ error: "Invalid bug category" });
         newPoints = bugType.default_points;
@@ -186,15 +186,15 @@ export const editTeamPoints = async (req: Request, res: Response, next: NextFunc
   const { id } = req.params;
   const { points, reason } = req.body;
   try {
-    // Adjust the team's points (update the relevant field in your schema)
+    
     const team = await Team.findByIdAndUpdate(
       id,
-      { $inc: { "bugs.0.score": points } }, // Adjust this path if your schema differs
+      { $inc: { "bugs.0.score": points } },
       { new: true }
     );
     if (!team) return res.status(404).json({ error: "Team not found" });
 
-    // Optionally, log the reason for audit purposes
+    // Should we have a field to mention the reason for manual change in score??
 
     res.json({ team, message: `Points adjusted by ${points} for reason: ${reason}` });
   } catch (err: any) {
@@ -204,7 +204,7 @@ export const editTeamPoints = async (req: Request, res: Response, next: NextFunc
 
 export const getLeaderboard = async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    // Assumes the first element in the 'bugs' array holds the cumulative bug bounty score
+    // The formula for the actual point calculation needs to be discussed first 
     const teams = await Team.find().sort({ "bugs.0.score": -1 }).select("name bugs");
     res.json(teams);
   } catch (err: any) {

@@ -1,21 +1,40 @@
-import { createBugValidator } from "../models/Leaderboard/validators/validator";
+import {
+  createBugValidator,
+  updateBugValidator,
+  createBugTypeValidator,
+  updateBugTypeValidator,
+  editTeamPointsValidator,
+} from "../models/Leaderboard/validators/validator";
+
 import { adminRequiredMiddleware } from "../middlewares/auth.middleware";
 import express, { RequestHandler } from "express";
 
-import { bugReport,editBugReport,listBugReports,getBugReportById,createBugType,updateBugType,listBugTypes,editTeamPoints,getLeaderboard } from "../controllers/bugs.controller";
+import {
+  bugReport,
+  editBugReport,
+  listBugReports,
+  getBugReportById,
+  createBugType,
+  updateBugType,
+  listBugTypes,
+  editTeamPoints,
+  getLeaderboard,
+} from "../controllers/bugs.controller";
 
 const router = express.Router();
 
 router.post(
-    "/report",adminRequiredMiddleware as RequestHandler,
-    createBugValidator as RequestHandler,
-    bugReport as RequestHandler
+  "/report",
+  adminRequiredMiddleware as RequestHandler,
+  createBugValidator,
+  bugReport as RequestHandler
 );
 
 router.patch(
-    "/edit-report/:id",adminRequiredMiddleware as RequestHandler,
-    updateBugValidator as RequestHandler,
-    editBugReport as RequestHandler
+  "/edit-report/:id",
+  adminRequiredMiddleware as RequestHandler,
+  updateBugValidator,
+  editBugReport as RequestHandler
 );
 
 // GET /api/bugs/list - List all bugs (Admin only)
@@ -34,14 +53,14 @@ router.get(
 router.post(
   "/add-bug-type",
   adminRequiredMiddleware as RequestHandler,
-  createBugTypeValidator as RequestHandler,
+  createBugTypeValidator,
   createBugType as RequestHandler
 );
 
 router.patch(
   "/edit-bug-type/:id",
   adminRequiredMiddleware as RequestHandler,
-  updateBugTypeValidator as RequestHandler,
+  updateBugTypeValidator,
   updateBugType as RequestHandler
 );
 
@@ -54,13 +73,13 @@ router.get(
 router.post(
   "/edit/:id/points",
   adminRequiredMiddleware as RequestHandler,
-  adjustPointsValidator as RequestHandler,
+  editTeamPointsValidator,
   editTeamPoints as RequestHandler
 );
 
 router.get(
   "/leaderboard",
-  // authMiddleware as RequestHandler, // All teams should be able to see the real time rankings 
+  // authMiddleware as RequestHandler, // All teams should be able to see the real time rankings
   // but to be on the safr side for us we can make it as admin only... then we need the admin middeware
   getLeaderboard as RequestHandler
 );
