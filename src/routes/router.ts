@@ -8,6 +8,7 @@ import inviteRoute from "./invite.route";
 import problemRoute from "./problem.route";
 import collegeRoute from "./college.route";
 import ticketRoute from "./ticket.route";
+import bugRoute from "./bugs.route";
 
 export function initRoutes(app: express.Application): void {
   app.use("/api/auth", authRoute);
@@ -18,4 +19,5 @@ export function initRoutes(app: express.Application): void {
   app.use("/api/problem", problemRoute);
   app.use("/api/college", collegeRoute);
   app.use("/api/ticket", ticketRoute);
+  app.use("/api/bugs",bugRoute);
 }
