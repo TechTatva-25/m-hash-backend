@@ -1,4 +1,14 @@
-import { Body, Container, Head, Hr, Html, Img, Preview, render, Text } from "@react-email/components";
+import {
+	Body,
+	Container,
+	Head,
+	Hr,
+	Html,
+	Img,
+	Preview,
+	render,
+	Text,
+} from "@react-email/components";
 import * as React from "react";
 
 interface EmailProps {
@@ -17,7 +27,9 @@ function Email(props: EmailProps): React.JSX.Element {
 				<Container style={container}>
 					{/* Hero Image */}
 					<Img
-						src={"https://res.cloudinary.com/dnfv0h10u/image/upload/v1726159919/image-2_det2dw.jpg"}
+						src={
+							"https://res.cloudinary.com/dnfv0h10u/image/upload/v1726159919/image-2_det2dw.jpg"
+						}
 						width="400"
 						height="50"
 						alt="Hero Image"
@@ -27,7 +39,9 @@ function Email(props: EmailProps): React.JSX.Element {
 					<Text style={header}>{subject}</Text>
 					{/* Second Image */}
 					<Img
-						src={"https://res.cloudinary.com/dnfv0h10u/image/upload/v1726159919/image-4_y5pcb8.jpg"}
+						src={
+							"https://res.cloudinary.com/dnfv0h10u/image/upload/v1726159919/image-4_y5pcb8.jpg"
+						}
 						width="400"
 						height="200"
 						alt="Content Image"
@@ -82,5 +96,8 @@ const hr = {
 	margin: "20px 0",
 };
 
-export const emailHtml = async (subject: string, message: string): Promise<string> =>
+export const emailHtml = async (
+	subject: string,
+	message: string,
+): Promise<string> =>
 	await render(<Email subject={subject} message={message} />);

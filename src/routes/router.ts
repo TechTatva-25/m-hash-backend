@@ -10,12 +10,12 @@ import collegeRoute from "./college.route";
 import ticketRoute from "./ticket.route";
 
 export function initRoutes(app: express.Application): void {
-  app.use("/api/auth", authRoute);
-  app.use("/api/judge", judgeRoute);
-  app.use("/api/admin", adminRoute);
-  app.use("/api/team", teamRoute);
-  app.use("/api/invite", inviteRoute);
-  app.use("/api/problem", problemRoute);
-  app.use("/api/college", collegeRoute);
-  app.use("/api/ticket", ticketRoute);
+	app.use("/api/auth", authRoute);
+	app.use("/api/judge", judgeRoute);
+	app.use("/api/admin", adminRoute);
+	app.use("/api/team", teamRoute);
+	app.use("/api/invite", inviteRoute);
+	app.use("/api/problem", problemRoute);
+	app.use("/api/college", collegeRoute);
+	app.use("/api/ticket", ticketRoute);
 }

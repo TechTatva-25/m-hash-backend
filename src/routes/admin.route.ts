@@ -2,24 +2,24 @@ import express, { RequestHandler } from "express";
 import rateLimiter from "express-rate-limit";
 
 import {
-  adminRequiredMiddleware,
-  validationMiddleware,
+	adminRequiredMiddleware,
+	validationMiddleware,
 } from "../middlewares/auth.middleware";
 import { TooManyRequestsException } from "../models/exceptions";
 import {
-  sendTeamMail,
-  AdmingetProgress,
-  makeJudge,
-  deleteTeam,
-  getAllSubmissions,
-  adminApprove,
-  adminReject,
-  getAdminStats,
-  getAllJudges,
-  assignProblem,
-  deassignProblem,
-  getTeamJudgeMapping,
-  exportSubmissionsToExcel 
+	sendTeamMail,
+	AdmingetProgress,
+	makeJudge,
+	deleteTeam,
+	getAllSubmissions,
+	adminApprove,
+	adminReject,
+	getAdminStats,
+	getAllJudges,
+	assignProblem,
+	deassignProblem,
+	getTeamJudgeMapping,
+	exportSubmissionsToExcel,
 } from "../controllers/admin.controller";
 import { getTeam, getProb } from "../controllers/judge.controller";
 
@@ -31,27 +31,27 @@ const router = express.Router();
 router.use(adminRequiredMiddleware as RequestHandler);
 
 const limiter = rateLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  handler: (_req, _res, next) => {
-    next(new TooManyRequestsException("Too many requests"));
-  },
+	windowMs: 15 * 60 * 1000,
+	max: 100,
+	handler: (_req, _res, next) => {
+		next(new TooManyRequestsException("Too many requests"));
+	},
 });
 
 router.post("/send-team-mail", limiter, sendTeamMail as RequestHandler);
 
 router.post(
-  "/get-team-prog",
-  validationMiddleware as RequestHandler,
-  getProgressValidator,
-  AdmingetProgress as RequestHandler
+	"/get-team-prog",
+	validationMiddleware as RequestHandler,
+	getProgressValidator,
+	AdmingetProgress as RequestHandler,
 );
 
 router.post(
-  "/make-judge",
-  makeJudgeValidator,
-  validationMiddleware as RequestHandler,
-  makeJudge as RequestHandler
+	"/make-judge",
+	makeJudgeValidator,
+	validationMiddleware as RequestHandler,
+	makeJudge as RequestHandler,
 );
 
 router.post("/delete-team", deleteTeam as RequestHandler);
@@ -77,7 +77,5 @@ router.post("/de-assign-problem", deassignProblem as RequestHandler);
 router.get("/getTeamJudgeMapping", getTeamJudgeMapping as RequestHandler);
 
 router.get("/submissions/export", exportSubmissionsToExcel as RequestHandler);
-
-
 
 export default router;

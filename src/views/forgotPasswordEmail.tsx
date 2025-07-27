@@ -1,4 +1,16 @@
-import { Body, Button, Container, Head, Hr, Html, Img, Preview, render, Section, Text } from "@react-email/components";
+import {
+	Body,
+	Button,
+	Container,
+	Head,
+	Hr,
+	Html,
+	Img,
+	Preview,
+	render,
+	Section,
+	Text,
+} from "@react-email/components";
 import * as React from "react";
 
 interface EmailProps {
@@ -15,7 +27,9 @@ function Email(props: EmailProps): React.JSX.Element {
 			<Body style={main}>
 				<Container style={container}>
 					<Img
-						src={"https://res.cloudinary.com/dnfv0h10u/image/upload/v1726159919/image-2_det2dw.jpg"}
+						src={
+							"https://res.cloudinary.com/dnfv0h10u/image/upload/v1726159919/image-2_det2dw.jpg"
+						}
 						width="400"
 						height="50"
 						alt="Hero Image"
@@ -23,14 +37,17 @@ function Email(props: EmailProps): React.JSX.Element {
 					/>
 					<Text style={header}>Welcome to M#</Text>
 					<Img
-						src={"https://res.cloudinary.com/dnfv0h10u/image/upload/v1726159919/image-4_y5pcb8.jpg"}
+						src={
+							"https://res.cloudinary.com/dnfv0h10u/image/upload/v1726159919/image-4_y5pcb8.jpg"
+						}
 						width="400"
 						height="200"
 						alt="Hero Image"
 						style={heroImage}
 					/>
 					<Text style={paragraph}>
-						You requested to reset your password, click the button below to reset your password
+						You requested to reset your password, click the button below to
+						reset your password
 						<br />
 						Note : The link will expire after 1 day
 					</Text>

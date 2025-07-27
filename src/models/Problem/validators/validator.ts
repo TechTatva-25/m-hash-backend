@@ -8,7 +8,9 @@ export const createProblemValidator = [
 	body("sdg_title").isString().isLength({ min: 1, max: 255 }),
 ];
 
-export const deleteProblemValidator = [body("problem_id").isString().isMongoId()];
+export const deleteProblemValidator = [
+	body("problem_id").isString().isMongoId(),
+];
 
 export const getProblemValidator = [query("problem_id").isString().isMongoId()];
 

@@ -21,7 +21,7 @@ const CategorySchema: Schema<ICategory> = new Schema<ICategory>(
 		description: { type: String, required: true },
 		max_score: { type: Number, required: true },
 	},
-	{ _id: false }
+	{ _id: false },
 );
 
 const RoundSchema: Schema<IRound> = new Schema<IRound>(
@@ -29,7 +29,7 @@ const RoundSchema: Schema<IRound> = new Schema<IRound>(
 		name: { type: String, required: true },
 		categories: { type: [CategorySchema], required: true },
 	},
-	{ timestamps: true }
+	{ timestamps: true },
 );
 
 export const Category = mongoose.model<ICategory>("Category", CategorySchema);

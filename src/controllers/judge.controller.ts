@@ -1,24 +1,27 @@
-import { NextFunction, Request , Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
 
 //import { getFile } from "../libs/s3";
 import College from "../models/College/college";
 import Config from "../models/Config/config";
-import { BadRequestException,ConflictException } from "../models/exceptions";
+import { BadRequestException, ConflictException } from "../models/exceptions";
 import Problem from "../models/Problem/problem";
 import Round from "../models/Round/round";
-import Submission,{ SubmissionStatus} from "../models/Submission/submission";
-import Team, {ITeam, JudgeScore} from "../models/Team/team";
+import Submission, { SubmissionStatus } from "../models/Submission/submission";
+import Team, { ITeam, JudgeScore } from "../models/Team/team";
 import User from "../models/User/user";
 
 interface Prob {
-    _id: string,
-    title: string,
-    sdg_id: number
-
+	_id: string;
+	title: string;
+	sdg_id: number;
 }
 
-export const updateSubmissionStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const updateSubmissionStatus = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	try {
 		const { submissionId } = req.body as Record<string, string>;
 
@@ -29,7 +32,7 @@ export const updateSubmissionStatus = async (req: Request, res: Response, next: 
 		const updatedSubmission = await Submission.findByIdAndUpdate(
 			submissionId,
 			{ status: SubmissionStatus.JUDGE_APPROVED },
-			{ new: true }
+			{ new: true },
 		);
 
 		if (!updatedSubmission) {
@@ -42,7 +45,11 @@ export const updateSubmissionStatus = async (req: Request, res: Response, next: 
 	}
 };
 
-export const RejectSubmissionStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const RejectSubmissionStatus = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	try {
 		const { submissionId } = req.body as Record<string, string>;
 
@@ -53,7 +60,7 @@ export const RejectSubmissionStatus = async (req: Request, res: Response, next: 
 		const updatedSubmission = await Submission.findByIdAndUpdate(
 			submissionId,
 			{ status: SubmissionStatus.JUDGE_REJECTED },
-			{ new: true }
+			{ new: true },
 		);
 
 		if (!updatedSubmission) {
@@ -110,7 +117,11 @@ export const RejectSubmissionStatus = async (req: Request, res: Response, next: 
 // 	}
 // };
 
-export const getTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getTeam = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	try {
 		const { teamId } = req.body as Record<string, string>;
 
@@ -130,7 +141,11 @@ export const getTeam = async (req: Request, res: Response, next: NextFunction): 
 	}
 };
 
-export const getProb = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getProb = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	try {
 		const { probId } = req.body as Record<string, string>; // Get the submission ID from the request body
 
@@ -150,7 +165,11 @@ export const getProb = async (req: Request, res: Response, next: NextFunction): 
 	}
 };
 
-export const listTeamsWithBugRound = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const listTeamsWithBugRound = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	try {
 		const limit = parseInt(req.query.limit as string) || 10;
 		let offset = parseInt(req.query.offset as string) || 0;
@@ -158,7 +177,10 @@ export const listTeamsWithBugRound = async (req: Request, res: Response, next: N
 		if (limit > 1000 || limit < 0) {
 			throw new BadRequestException("Limit must be between 0 and 1000");
 		}
-		const options: Record<string, string | { $regex: string; $options?: string } | { $in: string[] }> = {};
+		const options: Record<
+			string,
+			string | { $regex: string; $options?: string } | { $in: string[] }
+		> = {};
 		if (name) {
 			options.name = { $regex: name, $options: "i" };
 		}
@@ -185,21 +207,37 @@ export const listTeamsWithBugRound = async (req: Request, res: Response, next: N
 				{
 					status: SubmissionStatus.ADMIN_APPROVED,
 				},
-				"team_id -_id"
+				"team_id -_id",
 			)
 		).map((submission) => submission.team_id.toString());
 
 		options._id = { $in: approvedTeamIds };
 
-		const teams = await Team.find(options).limit(limit).skip(offset).populate("team_leader").lean();
+		const teams = await Team.find(options)
+			.limit(limit)
+			.skip(offset)
+			.populate("team_leader")
+			.lean();
 
-		res.status(200).json({ limit, offset, total, teams: teams, hasMore: offset + limit < total });
+		res
+			.status(200)
+			.json({
+				limit,
+				offset,
+				total,
+				teams: teams,
+				hasMore: offset + limit < total,
+			});
 	} catch (error) {
 		next(error);
 	}
 };
 
-export const updateBugRoundScore = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const updateBugRoundScore = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	try {
 		const { teamId, score, restoreIdx } = req.body as Record<string, string>;
 		const team = await Team.findById(teamId);
@@ -212,7 +250,12 @@ export const updateBugRoundScore = async (req: Request, res: Response, next: Nex
 		if (!isNaN(_restoreIdxParsed)) {
 			await Team.updateOne(
 				{ _id: teamId },
-				{ bugs: _restoreIdxParsed === -1 ? [] : team.bugs.slice(restoreIdx as unknown as number) }
+				{
+					bugs:
+						_restoreIdxParsed === -1
+							? []
+							: team.bugs.slice(restoreIdx as unknown as number),
+				},
 			);
 		} else {
 			await Team.updateOne(
@@ -224,13 +267,13 @@ export const updateBugRoundScore = async (req: Request, res: Response, next: Nex
 								(team as unknown as ITeam).bugs.length === 0
 									? score
 									: /* eslint-disable @typescript-eslint/restrict-plus-operands */
-									  score + (team as unknown as ITeam).bugs[0].score,
+										score + (team as unknown as ITeam).bugs[0].score,
 							bug_count: team.bugs.length + 1,
 							updatedAt: Date.now(),
 						},
 						...(team as unknown as ITeam).bugs,
 					],
-				}
+				},
 			);
 		}
 
@@ -241,9 +284,14 @@ export const updateBugRoundScore = async (req: Request, res: Response, next: Nex
 	}
 };
 
-export const getAllApprovedTeams = async (_req: Request, res: Response): Promise<void> => {
+export const getAllApprovedTeams = async (
+	_req: Request,
+	res: Response,
+): Promise<void> => {
 	try {
-		const submissions = await Submission.find({ status: SubmissionStatus.ADMIN_APPROVED });
+		const submissions = await Submission.find({
+			status: SubmissionStatus.ADMIN_APPROVED,
+		});
 		const approvedTeams = await Team.find({
 			_id: { $in: submissions.map((submission) => submission.team_id) },
 		}).lean();
@@ -253,11 +301,11 @@ export const getAllApprovedTeams = async (_req: Request, res: Response): Promise
 			approvedTeams.map(async (team) => {
 				const problem = await Submission.aggregate([
 					{
-		                $addFields: {
+						$addFields: {
 							team_id_obj: { $toObjectId: "$team_id" },
-			                problem_id_obj: { $toObjectId: "$problem_id" }
-		                }
-	                },
+							problem_id_obj: { $toObjectId: "$problem_id" },
+						},
+					},
 					{ $match: { team_id_obj: team._id } },
 					{
 						$lookup: {
@@ -284,10 +332,10 @@ export const getAllApprovedTeams = async (_req: Request, res: Response): Promise
 				return {
 					...team,
 					problemId: prob?._id ?? null,
-			        problemTitle: prob?.title ?? "Not Found",
-			        sdg_id: prob?.sdg_id ?? null,
+					problemTitle: prob?.title ?? "Not Found",
+					sdg_id: prob?.sdg_id ?? null,
 				};
-			})
+			}),
 		);
 
 		res.status(200).json(approvedTeamsWithProblemDetails);
@@ -297,7 +345,11 @@ export const getAllApprovedTeams = async (_req: Request, res: Response): Promise
 	}
 };
 
-export const updateTeamScore = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const updateTeamScore = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	try {
 		const { team_id, judge_id, round_id, category_id, score } = req.body as {
 			team_id: string;
@@ -317,7 +369,9 @@ export const updateTeamScore = async (req: Request, res: Response, next: NextFun
 			throw new Error("Team not found");
 		}
 
-		let judgeScore = team.judge_score.find((j) => j.judge_id.toString() === judge_id.toString());
+		let judgeScore = team.judge_score.find(
+			(j) => j.judge_id.toString() === judge_id.toString(),
+		);
 
 		if (!judgeScore) {
 			judgeScore = new JudgeScore({
@@ -326,7 +380,9 @@ export const updateTeamScore = async (req: Request, res: Response, next: NextFun
 			});
 			team.judge_score.push(judgeScore);
 		} else {
-			const roundScore = judgeScore.scores.find((r) => r.round_id.toString() === round_id);
+			const roundScore = judgeScore.scores.find(
+				(r) => r.round_id.toString() === round_id,
+			);
 
 			if (!roundScore) {
 				judgeScore.scores.push({
@@ -334,7 +390,9 @@ export const updateTeamScore = async (req: Request, res: Response, next: NextFun
 					category_scores: [{ category_id: category_id, score }],
 				});
 			} else {
-				const categoryScore = roundScore.category_scores.find((c) => c.category_id.toString() === category_id);
+				const categoryScore = roundScore.category_scores.find(
+					(c) => c.category_id.toString() === category_id,
+				);
 
 				if (categoryScore) {
 					categoryScore.score = score;
@@ -351,7 +409,10 @@ export const updateTeamScore = async (req: Request, res: Response, next: NextFun
 	}
 };
 
-export const getAllRounds = async (_req: Request, res: Response): Promise<void> => {
+export const getAllRounds = async (
+	_req: Request,
+	res: Response,
+): Promise<void> => {
 	try {
 		const rounds = await Round.find();
 		res.status(200).json(rounds);
@@ -361,7 +422,11 @@ export const getAllRounds = async (_req: Request, res: Response): Promise<void> 
 	}
 };
 
-export const updateTeamDeployStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const updateTeamDeployStatus = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	try {
 		const { teamId, deployed } = req.body as Record<string, string>;
 		const team = await Team.findById(teamId);
@@ -380,9 +445,15 @@ export const updateTeamDeployStatus = async (req: Request, res: Response, next: 
 	}
 };
 
-export const getAverageDenominatorConfig = async (_req: Request, res: Response): Promise<void> => {
+export const getAverageDenominatorConfig = async (
+	_req: Request,
+	res: Response,
+): Promise<void> => {
 	try {
-		const averageDenominatorConfig = await Config.findOne({ key: "average_denominator" }, "-_id");
+		const averageDenominatorConfig = await Config.findOne(
+			{ key: "average_denominator" },
+			"-_id",
+		);
 		res.status(200).json(averageDenominatorConfig);
 	} catch (error) {
 		console.log(error);
@@ -390,19 +461,24 @@ export const getAverageDenominatorConfig = async (_req: Request, res: Response):
 	}
 };
 
-export const getMyProblems = async (req: Request, res: Response): Promise<void> => {
+export const getMyProblems = async (
+	req: Request,
+	res: Response,
+): Promise<void> => {
 	try {
 		const userId = req.session.userId;
 		if (!userId) {
 			throw new Error("User ID is required");
 		}
 		const user = await User.findOne({ _id: userId });
-		console.log(user)
+		console.log(user);
 		if (!user?.problem_statement || !Array.isArray(user.problem_statement)) {
 			res.status(200).json([]);
 			return;
 		}
-		const problemIds = user.problem_statement.map(id => new mongoose.Types.ObjectId(id));
+		const problemIds = user.problem_statement.map(
+			(id) => new mongoose.Types.ObjectId(id),
+		);
 		const problems = await Problem.find({ _id: { $in: problemIds } });
 		res.status(200).json(problems);
 	} catch (error) {
