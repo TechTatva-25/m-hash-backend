@@ -35,14 +35,18 @@ const UserSchema: Schema<IUser> = new Schema<IUser>(
 		mobile_number: { type: String, required: true },
 		college: { type: Schema.Types.ObjectId, ref: "College", required: true },
 		collegeOther: { type: String, required: true },
-		role: { type: String, enum: [UserRoles.USER, UserRoles.ADMIN, UserRoles.JUDGE], default: UserRoles.USER },
+		role: {
+			type: String,
+			enum: [UserRoles.USER, UserRoles.ADMIN, UserRoles.JUDGE],
+			default: UserRoles.USER,
+		},
 		verified: { type: Boolean, default: false },
 		problem_statement: [{ type: String, ref: "ProblemStatement" }],
 		otp: { type: String, required: false, default: null },
 		otpExpiresAt: { type: Date, required: false, default: null },
 		token: { type: String, required: false, default: null },
 	},
-	{ timestamps: true }
+	{ timestamps: true },
 );
 
 UserSchema.pre<IUser>("save", async function (next) {
@@ -52,7 +56,9 @@ UserSchema.pre<IUser>("save", async function (next) {
 	next();
 });
 
-UserSchema.methods.validPassword = async function (password: string): Promise<boolean> {
+UserSchema.methods.validPassword = async function (
+	password: string,
+): Promise<boolean> {
 	return bcrypt.compare(password, (this as IUser).password);
 };
 

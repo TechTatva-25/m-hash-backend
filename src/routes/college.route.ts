@@ -1,30 +1,30 @@
 import express, { RequestHandler } from "express";
 
 import {
-  getCollege,
-  getColleges,
-  getCollegesWithState,
+	getCollege,
+	getColleges,
+	getCollegesWithState,
 } from "../controllers/college.controller";
 import {
-  adminRequiredMiddleware,
-  validationMiddleware,
+	adminRequiredMiddleware,
+	validationMiddleware,
 } from "../middlewares/auth.middleware";
 import { getCollegeValidator } from "../models/College/validators/validator";
 
 const router = express.Router();
 
 router.get(
-  "/get",
-  getCollegeValidator,
-  validationMiddleware as RequestHandler,
-  getCollege as RequestHandler
+	"/get",
+	getCollegeValidator,
+	validationMiddleware as RequestHandler,
+	getCollege as RequestHandler,
 );
 
 router.get(
-  "/getWithState",
-  adminRequiredMiddleware as RequestHandler,
-  validationMiddleware as RequestHandler,
-  getCollegesWithState as RequestHandler
+	"/getWithState",
+	adminRequiredMiddleware as RequestHandler,
+	validationMiddleware as RequestHandler,
+	getCollegesWithState as RequestHandler,
 );
 
 router.get("/list", getColleges as RequestHandler);

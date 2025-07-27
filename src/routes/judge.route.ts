@@ -2,18 +2,18 @@ import express, { RequestHandler } from "express";
 
 import { judgeRequiredMiddleware } from "../middlewares/auth.middleware";
 import {
-  updateSubmissionStatus,
-  RejectSubmissionStatus,
-  getTeam,
-  getProb,
-  listTeamsWithBugRound,
-  updateBugRoundScore,
-  getAllApprovedTeams,
-  updateTeamScore,
-  getAllRounds,
-  updateTeamDeployStatus,
-  getAverageDenominatorConfig,
-  getMyProblems,
+	updateSubmissionStatus,
+	RejectSubmissionStatus,
+	getTeam,
+	getProb,
+	listTeamsWithBugRound,
+	updateBugRoundScore,
+	getAllApprovedTeams,
+	updateTeamScore,
+	getAllRounds,
+	updateTeamDeployStatus,
+	getAverageDenominatorConfig,
+	getMyProblems,
 } from "../controllers/judge.controller";
 const router = express.Router();
 
@@ -38,13 +38,13 @@ router.post("/update-score", updateTeamScore as RequestHandler);
 router.get("/get-rounds", getAllRounds as RequestHandler);
 
 router.post(
-  "/updateTeamDeployStatus",
-  updateTeamDeployStatus as RequestHandler
+	"/updateTeamDeployStatus",
+	updateTeamDeployStatus as RequestHandler,
 );
 
 router.get(
-  "/getAverageDenominatorConfig",
-  getAverageDenominatorConfig as RequestHandler
+	"/getAverageDenominatorConfig",
+	getAverageDenominatorConfig as RequestHandler,
 );
 
 router.get("/get-problems", getMyProblems as RequestHandler);

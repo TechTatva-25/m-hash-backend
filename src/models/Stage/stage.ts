@@ -24,7 +24,13 @@ const StageSchema: Schema<IStage> = new Schema<IStage>(
 	{
 		stage: {
 			type: String,
-			enum: [Stages.REGISTRATION, Stages.SUBMISSION, Stages.QUALIFIERS, Stages.FINALS, Stages.RESULTS],
+			enum: [
+				Stages.REGISTRATION,
+				Stages.SUBMISSION,
+				Stages.QUALIFIERS,
+				Stages.FINALS,
+				Stages.RESULTS,
+			],
 			required: true,
 		},
 		name: { type: String, required: true },
@@ -33,16 +39,17 @@ const StageSchema: Schema<IStage> = new Schema<IStage>(
 		start_date: { type: Date, required: true },
 		end_date: { type: Date, required: true },
 	},
-	{ timestamps: true }
+	{ timestamps: true },
 );
 
-StageSchema.methods.getPreviousStage = async function (): Promise<IStage | null> {
-	const stage = (this as IStage).toObject() as IStage;
-	const previousStage = await mongoose
-		.model<IStage>("Stage")
-		.findOne({ stage: { $lt: stage.stage } })
-		.sort({ stage: -1 });
-	return previousStage;
-};
+StageSchema.methods.getPreviousStage =
+	async function (): Promise<IStage | null> {
+		const stage = (this as IStage).toObject() as IStage;
+		const previousStage = await mongoose
+			.model<IStage>("Stage")
+			.findOne({ stage: { $lt: stage.stage } })
+			.sort({ stage: -1 });
+		return previousStage;
+	};
 
 export default mongoose.model<IStage>("Stage", StageSchema);

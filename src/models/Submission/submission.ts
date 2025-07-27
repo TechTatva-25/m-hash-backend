@@ -54,7 +54,7 @@ const SubmissionSchema: Schema<ISubmission> = new Schema<ISubmission>(
 			default: SubmissionStatus.PENDING,
 		},
 	},
-	{ timestamps: true }
+	{ timestamps: true },
 );
 
 export default mongoose.model<ISubmission>("Submission", SubmissionSchema);

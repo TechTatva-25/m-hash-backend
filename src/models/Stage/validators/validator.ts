@@ -1,7 +1,9 @@
 import { body } from "express-validator";
 
 export const createStageValidator = [
-	body("stage").isString().isIn(["registration", "submission", "qualifiers", "finals", "results"]),
+	body("stage")
+		.isString()
+		.isIn(["registration", "submission", "qualifiers", "finals", "results"]),
 	body("name").isString().isLength({ min: 1, max: 255 }),
 	body("description").isString().isLength({ min: 1, max: 255 }),
 	body("active").isBoolean(),

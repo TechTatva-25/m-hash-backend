@@ -22,7 +22,7 @@ const ProblemSchema: Schema<IProblem> = new Schema<IProblem>(
 		sdg_id: { type: Number, required: true },
 		sdg_title: { type: String, required: true },
 	},
-	{ timestamps: true }
+	{ timestamps: true },
 );
 
 export default mongoose.model<IProblem>("Problem", ProblemSchema);

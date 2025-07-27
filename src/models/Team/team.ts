@@ -64,9 +64,12 @@ const TeamSchema: Schema<ITeam> = new Schema<ITeam>(
 		judge_score: { type: [JudgeScoreSchema], default: [] },
 		deployed: { type: Boolean, default: false },
 	},
-	{ timestamps: true }
+	{ timestamps: true },
 );
 
-export const JudgeScore = mongoose.model<IJudgeScore>("JudgeScore", JudgeScoreSchema);
+export const JudgeScore = mongoose.model<IJudgeScore>(
+	"JudgeScore",
+	JudgeScoreSchema,
+);
 
 export default mongoose.model<ITeam>("Team", TeamSchema);

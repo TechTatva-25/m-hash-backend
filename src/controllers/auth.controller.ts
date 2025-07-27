@@ -2,13 +2,21 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
-import { sendForgotPasswordEmail, sendOTPVerificationEmail, SignType } from "../libs/mails";
+import {
+	sendForgotPasswordEmail,
+	sendOTPVerificationEmail,
+	SignType,
+} from "../libs/mails";
 import College from "../models/College/college";
-import { BadRequestException, ConflictException, UnauthorizedException } from "../models/exceptions";
+import {
+	BadRequestException,
+	ConflictException,
+	UnauthorizedException,
+} from "../models/exceptions";
 import Submission, { SubmissionStatus } from "../models/Submission/submission";
 import Team from "../models/Team/team";
 import User from "../models/User/user";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
 export interface queryProps {
 	$or?: Record<string, { $regex: string; $options: string }>[];
 	college?: string;
@@ -25,7 +33,11 @@ interface LeaderboardRecord {
 	bugs: BugHistory[];
 }
 
-export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const register = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	/**
 	 * Expects a request body with the following fields:
 	 * - email: string
@@ -43,10 +55,15 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 	 * @returns {Promise<void>}
 	 */
 	try {
-		const { email, username, password, mobile_number, college, collegeOther, gender } = req.body as Record<
-			string,
-			string
-		>;
+		const {
+			email,
+			username,
+			password,
+			mobile_number,
+			college,
+			collegeOther,
+			gender,
+		} = req.body as Record<string, string>;
 
 		// const token = jwt.sign({ email, type: SignType.VERIFICATION }, process.env.JWT_SECRET ?? "secret", {
 		// 	expiresIn: "1d",
@@ -62,18 +79,25 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 			mobile_number,
 			college,
 			collegeOther: collegeName,
-			gender
+			gender,
 		}) as mongoose.Document & { _id: mongoose.Types.ObjectId };
 		await user.save();
 		// await sendVerificationEmail(email, token);
-		await sendOTPVerificationEmail(email, (user._id as mongoose.Types.ObjectId).toString());
+		await sendOTPVerificationEmail(
+			email,
+			(user._id as mongoose.Types.ObjectId).toString(),
+		);
 		res.status(201).send({ message: "User created" });
 	} catch (err) {
 		next(err);
 	}
 };
 
-export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const login = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	/**
 	 * Expects a request body with the following fields:
 	 * - email: string
@@ -97,7 +121,9 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 			throw new UnauthorizedException("No such user found");
 		}
 		if (!user.verified) {
-			throw new UnauthorizedException("User not verified, please check your email");
+			throw new UnauthorizedException(
+				"User not verified, please check your email",
+			);
 		}
 		const isValid = await user.validPassword(password);
 		if (!isValid) {
@@ -112,7 +138,11 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 	}
 };
 
-export const logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const logout = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	/**
 	 * Logs out the user by destroying the session.
 	 *
@@ -134,7 +164,11 @@ export const logout = async (req: Request, res: Response, next: NextFunction): P
 	}
 };
 
-export const me = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const me = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	/**
 	 * Returns the user object of the currently logged in user, requires authentication and account verification.
 	 *
@@ -158,7 +192,11 @@ export const me = async (req: Request, res: Response, next: NextFunction): Promi
 	}
 };
 
-export const sendVerificationMail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const sendVerificationMail = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	/**
 	 * Expects a request body with the following fields:
 	 * - email: string
@@ -182,14 +220,21 @@ export const sendVerificationMail = async (req: Request, res: Response, next: Ne
 		}
 
 		// Use the centralized OTP generation and email sending function
-		await sendOTPVerificationEmail(email, (user._id as mongoose.Types.ObjectId).toString());
+		await sendOTPVerificationEmail(
+			email,
+			(user._id as mongoose.Types.ObjectId).toString(),
+		);
 		res.status(200).send({ message: "Verification email sent" });
 	} catch (err) {
 		next(err);
 	}
 };
 
-export const verifyEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const verifyEmail = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	/**
 	 *
 	 * Verifies the email of the user with the given OTP and sets the verified flag to true.
@@ -200,51 +245,62 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
 	 *
 	 * @returns {Promise<void>}
 	 */
-   try {
-	const { email, otp } = req.body as Record<string, string>;
+	try {
+		const { email, otp } = req.body as Record<string, string>;
 
-	if (!email || !otp) {
-		throw new BadRequestException("Email and OTP are required");
-	}
+		if (!email || !otp) {
+			throw new BadRequestException("Email and OTP are required");
+		}
 
-	const user = await User.findOne({ email });
+		const user = await User.findOne({ email });
 
-	if (!user) throw new UnauthorizedException("No such user found");
+		if (!user) throw new UnauthorizedException("No such user found");
 
-	if (user.verified) {
-		res.status(200).send({ message: "Email already verified" });
-		return;
-	}
+		if (user.verified) {
+			res.status(200).send({ message: "Email already verified" });
+			return;
+		}
 
-	if (!user.otp || !user.otpExpiresAt) {
-		throw new UnauthorizedException("No OTP found. Please request a new verification code");
-	}
+		if (!user.otp || !user.otpExpiresAt) {
+			throw new UnauthorizedException(
+				"No OTP found. Please request a new verification code",
+			);
+		}
 
-	// Check if the OTP is expired
-	if (user.otpExpiresAt.getTime() < Date.now()) {
+		// Check if the OTP is expired
+		if (user.otpExpiresAt.getTime() < Date.now()) {
+			user.otp = undefined;
+			user.otpExpiresAt = undefined;
+			await user.save();
+			throw new UnauthorizedException(
+				"OTP has expired. Please request a new verification code",
+			);
+		}
+
+		// Verify the OTP
+		const isMatch = await bcrypt.compare(otp, user.otp);
+		if (!isMatch)
+			throw new UnauthorizedException(
+				"Invalid OTP. Please check and try again",
+			);
+
+		// Mark user as verified and clear OTP data
+		user.verified = true;
 		user.otp = undefined;
 		user.otpExpiresAt = undefined;
 		await user.save();
-		throw new UnauthorizedException("OTP has expired. Please request a new verification code");
+
+		res.status(200).send({ message: "Email verified successfully" });
+	} catch (err) {
+		next(err);
 	}
-
-	// Verify the OTP
-	const isMatch = await bcrypt.compare(otp, user.otp);
-	if (!isMatch) throw new UnauthorizedException("Invalid OTP. Please check and try again");
-
-	// Mark user as verified and clear OTP data
-	user.verified = true;
-	user.otp = undefined;
-	user.otpExpiresAt = undefined;
-	await user.save();
-
-	res.status(200).send({ message: "Email verified successfully" });
-   } catch (err) {
-	next(err);
-   }
 };
 
-export const forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const forgotPassword = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	/**
 	 * Expects a request body with the following fields:
 	 * - email: string
@@ -263,9 +319,13 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
 		if (!user) {
 			throw new UnauthorizedException("No such user found");
 		}
-		const token = jwt.sign({ email, type: SignType.FORGOT_PASSWORD }, process.env.JWT_SECRET ?? "secret", {
-			expiresIn: "1d",
-		});
+		const token = jwt.sign(
+			{ email, type: SignType.FORGOT_PASSWORD },
+			process.env.JWT_SECRET ?? "secret",
+			{
+				expiresIn: "1d",
+			},
+		);
 		user.token = token;
 		await user.save();
 		await sendForgotPasswordEmail(email, token);
@@ -275,7 +335,11 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
 	}
 };
 
-export const resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const resetPassword = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	/**
 	 * Expects a request body with the following fields:
 	 * - password: string
@@ -293,7 +357,10 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
 		const { password, token } = req.body as Record<string, string>;
 		let decoded: Record<string, string> & { type: SignType };
 		try {
-			decoded = jwt.verify(token, process.env.JWT_SECRET ?? "secret") as Record<string, string> & {
+			decoded = jwt.verify(token, process.env.JWT_SECRET ?? "secret") as Record<
+				string,
+				string
+			> & {
 				type: SignType;
 			};
 		} catch (err) {
@@ -318,7 +385,11 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
 	}
 };
 
-export const listUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const listUsers = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	try {
 		const limit = parseInt(req.query.limit as string) || 10;
 		let offset = parseInt(req.query.offset as string) || 0;
@@ -364,7 +435,7 @@ export const listUsers = async (req: Request, res: Response, next: NextFunction)
 					const { password, token, ...rest } = user;
 
 					return { ...rest, collegeState: college.state };
-				})
+				}),
 			);
 
 			res.status(200).send({
@@ -377,7 +448,16 @@ export const listUsers = async (req: Request, res: Response, next: NextFunction)
 		} else {
 			const usersWithoutSensitiveDetails = users.map((user) => {
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const { password, token, email, mobile_number, gender, verified, role, ...rest } = user;
+				const {
+					password,
+					token,
+					email,
+					mobile_number,
+					gender,
+					verified,
+					role,
+					...rest
+				} = user;
 				return rest;
 			});
 
@@ -394,14 +474,22 @@ export const listUsers = async (req: Request, res: Response, next: NextFunction)
 	}
 };
 
-export const getHomepageStats = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getHomepageStats = async (
+	_req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	try {
 		const users = await User.countDocuments({});
 		const teams = await Team.countDocuments({});
 		// const submissions = await Submission.countDocuments({});
 
 		// const colleges = new Set((await Team.find({}, "college -_id")).map((team) => team.college.toString())).size;
-		const colleges = new Set((await User.find({}, "collegeOther -_id")).map((team) => team.collegeOther)).size;
+		const colleges = new Set(
+			(await User.find({}, "collegeOther -_id")).map(
+				(team) => team.collegeOther,
+			),
+		).size;
 
 		res.status(200).send({
 			users,
@@ -414,7 +502,11 @@ export const getHomepageStats = async (_req: Request, res: Response, next: NextF
 	}
 };
 
-export const getHomepageLeaderboard = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getHomepageLeaderboard = async (
+	_req: Request,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
 	try {
 		const teams: LeaderboardRecord[] = (await Submission.aggregate([
 			{

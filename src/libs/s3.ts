@@ -1,4 +1,9 @@
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+	DeleteObjectCommand,
+	GetObjectCommand,
+	PutObjectCommand,
+	S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 interface s3ClientCredentials {
@@ -20,8 +25,10 @@ function getS3ClientCredentials(): s3ClientCredentials {
 	const accessKeyId = process.env.S3_ACCESS_KEY_ID;
 	const secretKey = process.env.S3_SECRET_KEY;
 	const bucketName = process.env.S3_BUCKET_NAME;
-	const pptDirectory = process.env.S3_PPT_UPLOAD_DIR ?? "mhash_submission_ppts_02be61d23h";
-	const videoDirectory = process.env.S3_VIDEO_UPLOAD_DIR ?? "mhash_submission_videos_02be61d23h";
+	const pptDirectory =
+		process.env.S3_PPT_UPLOAD_DIR ?? "mhash_submission_ppts_02be61d23h";
+	const videoDirectory =
+		process.env.S3_VIDEO_UPLOAD_DIR ?? "mhash_submission_videos_02be61d23h";
 	const accessUrlExpiresSeconds = 604800;
 	// const accessUrlExpiresSeconds = process.env.S3_ACCESS_URL_EXPIRES_IN
 	//  ? parseInt(process.env.S3_ACCESS_URL_EXPIRES_IN)
@@ -52,14 +59,18 @@ const s3Client = new S3Client({
 	},
 });
 
-export const putFile = async (fileName: string, fileData: Buffer, isPpt: boolean): Promise<boolean> => {
+export const putFile = async (
+	fileName: string,
+	fileData: Buffer,
+	isPpt: boolean,
+): Promise<boolean> => {
 	try {
 		const response = await s3Client.send(
 			new PutObjectCommand({
 				Bucket: creds.bucketName,
 				Key: `${isPpt ? creds.pptDirectory : creds.videoDirectory}/${fileName}`,
 				Body: fileData,
-			})
+			}),
 		);
 		return response.$metadata.httpStatusCode === 200;
 	} catch (error) {
@@ -68,7 +79,10 @@ export const putFile = async (fileName: string, fileData: Buffer, isPpt: boolean
 	}
 };
 
-export const getFile = async (fileName: string, isPpt: boolean): Promise<getFileResponse> => {
+export const getFile = async (
+	fileName: string,
+	isPpt: boolean,
+): Promise<getFileResponse> => {
 	try {
 		const command = new GetObjectCommand({
 			Bucket: creds.bucketName,
@@ -84,13 +98,16 @@ export const getFile = async (fileName: string, isPpt: boolean): Promise<getFile
 	}
 };
 
-export const deleteFile = async (fileName: string, isPpt: boolean): Promise<boolean> => {
+export const deleteFile = async (
+	fileName: string,
+	isPpt: boolean,
+): Promise<boolean> => {
 	try {
 		const response = await s3Client.send(
 			new DeleteObjectCommand({
 				Bucket: creds.bucketName,
 				Key: `${isPpt ? creds.pptDirectory : creds.videoDirectory}/${fileName}`,
-			})
+			}),
 		);
 		return response.$metadata.httpStatusCode === 204;
 	} catch (error) {
