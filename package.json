@@ -18,6 +18,7 @@
     "@aws-sdk/client-ses": "^3.817.0",
     "@aws-sdk/s3-request-presigner": "^3.824.0",
     "@react-email/components": "^0.0.41",
+    "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.6.1",
     "connect-mongo": "^5.1.0",
