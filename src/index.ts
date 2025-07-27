@@ -28,6 +28,14 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
+declare module "express-session" {
+  interface SessionData {
+    userId?: string;
+    username?: string;
+    role?: string;
+  }
+}
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "defaultsecret",
@@ -40,7 +48,7 @@ app.use(
       maxAge: 1000 * 60 * 60, // 1 hour
       httpOnly: true,
       secure: false, // true if HTTPS in prod
-      sameSite: 'lax' // allows the cookie to be sent in cross-origin requests
+      sameSite: "lax", // allows the cookie to be sent in cross-origin requests
     },
   })
 );

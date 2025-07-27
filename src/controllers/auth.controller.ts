@@ -212,7 +212,8 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
 	if (!user) throw new UnauthorizedException("No such user found");
 
 	if (user.verified) {
-		return res.status(200).send({ message: "Email already verified" });
+		res.status(200).send({ message: "Email already verified" });
+		return;
 	}
 
 	if (!user.otp || !user.otpExpiresAt) {
