@@ -23,11 +23,16 @@ const ProgressSchema: Schema<IProgress> = new Schema<IProgress>(
 		completed: { type: Boolean, default: false },
 		disqualified: { type: Boolean, default: false },
 	},
-	{ collection: "progress", timestamps: true }
+	{ collection: "progress", timestamps: true },
 );
 
-ProgressSchema.statics.createInitialProgress = async function (teamId: mongoose.Types.ObjectId): Promise<void> {
-	const stage = await Stage.findOne({ stage: Stages.SUBMISSION, end_date: { $gte: new Date() } });
+ProgressSchema.statics.createInitialProgress = async function (
+	teamId: mongoose.Types.ObjectId,
+): Promise<void> {
+	const stage = await Stage.findOne({
+		stage: Stages.SUBMISSION,
+		end_date: { $gte: new Date() },
+	});
 	if (!stage) {
 		throw new Error("No stage is ongoing");
 	}
@@ -37,7 +42,9 @@ ProgressSchema.statics.createInitialProgress = async function (teamId: mongoose.
 	await this.create({ stage: stage._id, team: teamId });
 };
 
-ProgressSchema.methods.getProgress = async function (): Promise<Partial<IProgress>> {
+ProgressSchema.methods.getProgress = async function (): Promise<
+	Partial<IProgress>
+> {
 	const progress = (this as IProgress).toObject() as IProgress;
 	const stage = await Stage.findOne({ _id: progress.stage });
 	if (!stage) {
@@ -46,14 +53,28 @@ ProgressSchema.methods.getProgress = async function (): Promise<Partial<IProgres
 	if (stage.active) {
 		return { ...progress, completed: false, disqualified: false };
 	}
-	if (stage.stage === Stages.RESULTS && progress.completed && stage.end_date < new Date()) {
+	if (
+		stage.stage === Stages.RESULTS &&
+		progress.completed &&
+		stage.end_date < new Date()
+	) {
 		return { ...progress, completed: true, disqualified: false };
 	}
-	const previousStage = stage.stage === Stages.REGISTRATION ? stage : await stage.getPreviousStage();
-	if (previousStage && previousStage._id === progress.stage && previousStage.end_date < new Date()) {
+	const previousStage =
+		stage.stage === Stages.REGISTRATION
+			? stage
+			: await stage.getPreviousStage();
+	if (
+		previousStage &&
+		previousStage._id === progress.stage &&
+		previousStage.end_date < new Date()
+	) {
 		return { ...progress, completed: false, disqualified: true };
 	}
 	return { ...progress, completed: false, disqualified: false };
 };
 
-export default mongoose.model<IProgress, IProgressModel>("Progress", ProgressSchema);
+export default mongoose.model<IProgress, IProgressModel>(
+	"Progress",
+	ProgressSchema,
+);

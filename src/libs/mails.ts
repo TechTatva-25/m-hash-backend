@@ -51,7 +51,10 @@ export const transporter = SMTPTransport.createTransport({
 // 	await transporter.sendMail(mailOptions);
 // };
 
-export const sendOTPVerificationEmail = async (email: string, _id: string): Promise<void> => {
+export const sendOTPVerificationEmail = async (
+	email: string,
+	_id: string,
+): Promise<void> => {
 	try {
 		// Generate a 4-digit OTP
 		const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
@@ -85,8 +88,10 @@ export const sendOTPVerificationEmail = async (email: string, _id: string): Prom
 	}
 };
 
-
-export const sendForgotPasswordEmail = async (email: string, token: string): Promise<void> => {
+export const sendForgotPasswordEmail = async (
+	email: string,
+	token: string,
+): Promise<void> => {
 	const url = `${process.env.CLIENT_URL ?? "http://localhost:3000"}/reset-password?token=${token}`;
 	const mailOptions = {
 		from: process.env.EMAIL_USER,
@@ -97,7 +102,11 @@ export const sendForgotPasswordEmail = async (email: string, token: string): Pro
 	await transporter.sendMail(mailOptions);
 };
 
-export const sendNotificationEmail = async (email: string, subject: string, message: string): Promise<void> => {
+export const sendNotificationEmail = async (
+	email: string,
+	subject: string,
+	message: string,
+): Promise<void> => {
 	const mailOptions = {
 		from: process.env.EMAIL_USER,
 		to: email,

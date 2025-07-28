@@ -43,14 +43,17 @@ function Email(props: EmailProps): React.JSX.Element {
 					/>
 					<Text style={paragraph}>
 						Greetings, <br />
-						Use the following OTP to verify your account. It is valid for 24 hours.
+						Use the following OTP to verify your account. It is valid for 24
+						hours.
 					</Text>
 
 					<Section style={otpBoxContainer}>
 						<Text style={otpBox}>{otp}</Text>
 					</Section>
 
-					<Text style={paragraph}>Didn’t get the code? Try resending the email.</Text>
+					<Text style={paragraph}>
+						Didn’t get the code? Try resending the email.
+					</Text>
 					<Section style={btnContainer}>
 						<Button
 							style={buttonSecondary}
@@ -89,8 +92,6 @@ const otpBox = {
 	borderRadius: "8px",
 	letterSpacing: "8px",
 };
-
-
 
 const main = {
 	backgroundColor: "#ffffff",
