@@ -189,7 +189,7 @@ export const sendVerificationMail = async (req: Request, res: Response, next: Ne
 	}
 };
 
-export const verifyEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const verifyEmail = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
 	/**
 	 *
 	 * Verifies the email of the user with the given OTP and sets the verified flag to true.
