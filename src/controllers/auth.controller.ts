@@ -306,6 +306,7 @@ export const sendVerificationMail = async (
   }
 };
 
+
 export const verifyEmail = async (
   req: Request,
   res: Response,
@@ -370,6 +371,7 @@ export const verifyEmail = async (
   } catch (err) {
     next(err);
   }
+
 };
 
 export const forgotPassword = async (
@@ -578,6 +580,7 @@ export const getHomepageStats = async (
   }
 };
 
+
 export const getHomepageLeaderboard = async (
   _req: Request,
   res: Response,
@@ -620,4 +623,6 @@ export const getHomepageLeaderboard = async (
   } catch (err) {
     next(err);
   }
+
+
 };
