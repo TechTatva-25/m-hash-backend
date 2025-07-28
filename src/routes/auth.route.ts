@@ -1,6 +1,6 @@
 import express, { RequestHandler } from "express";
 import rateLimiter from "express-rate-limit";
-import type { SessionData} from "express-session";
+import type { SessionData } from "express-session";
 import {
 	forgotPassword,
 	// getHomepageLeaderboard,
@@ -14,7 +14,11 @@ import {
 	sendVerificationMail,
 	verifyEmail,
 } from "../controllers/auth.controller";
-import { authRequiredMiddleWare, registerMiddleware, validationMiddleware } from "../middlewares/auth.middleware";
+import {
+	authRequiredMiddleWare,
+	registerMiddleware,
+	validationMiddleware,
+} from "../middlewares/auth.middleware";
 import { registrationStoppedMiddleware } from "../middlewares/registrationStopped.middleware";
 import { TooManyRequestsException } from "../models/exceptions";
 import {
@@ -42,7 +46,7 @@ router.post(
 	registerValidator,
 	registrationStoppedMiddleware as unknown as RequestHandler,
 	registerMiddleware as unknown as RequestHandler,
-	register as RequestHandler
+	register as RequestHandler,
 );
 
 router.post(
@@ -50,54 +54,65 @@ router.post(
 	limiter,
 	loginValidator,
 	validationMiddleware as unknown as RequestHandler,
-	login as RequestHandler
+	login as RequestHandler,
 );
 
-router.post("/logout", authRequiredMiddleWare as unknown as RequestHandler, logout as RequestHandler);
+router.post(
+	"/logout",
+	authRequiredMiddleWare as unknown as RequestHandler,
+	logout as RequestHandler,
+);
 
-router.get("/me", authRequiredMiddleWare as unknown as RequestHandler, me as RequestHandler);
+router.get(
+	"/me",
+	authRequiredMiddleWare as unknown as RequestHandler,
+	me as RequestHandler,
+);
 
 router.post(
 	"/send-verification-mail",
 	limiter,
 	sendVerifyEmailValidator,
 	validationMiddleware as unknown as RequestHandler,
-	sendVerificationMail as RequestHandler
+	sendVerificationMail as RequestHandler,
 );
 
-router.get(
+router.post(
 	"/verify-email",
 	verifyEmailValidator,
 	validationMiddleware as unknown as RequestHandler,
-	verifyEmail as RequestHandler
+	verifyEmail as RequestHandler,
 );
 
 router.post(
 	"/forgot-password",
 	limiter,
 	validationMiddleware as unknown as RequestHandler,
-	forgotPassword as RequestHandler
+	forgotPassword as RequestHandler,
 );
 
 router.post(
 	"/reset-password",
 	resetPasswordValidator,
 	validationMiddleware as unknown as RequestHandler,
-	resetPassword as RequestHandler
+	resetPassword as RequestHandler,
 );
 
 router.get("/get-session", (async (req, res) => {
-	req.sessionStore.get(req.session.id, (err: any, session: SessionData | null | undefined) => {
-		if (err) {
-			throw err;
-		}
-		res.json({
-			id: session ? req.session.id : null,
-			userId: session?.userId,
-			username: session?.username,
-			expires_at: session?.cookie.expires,
-		});
-	});
+	req.sessionStore.get(
+		req.session.id,
+		(err: any, session: SessionData | null | undefined) => {
+			if (err) {
+				throw err;
+			}
+			res.json({
+				id: session ? req.session.id : null,
+				userId: session?.userId,
+				username: session?.username,
+				expires_at: session?.cookie.expires,
+			});
+		},
+	);
 }) as RequestHandler);
 
 router.get(
@@ -105,7 +120,7 @@ router.get(
 	authRequiredMiddleWare as unknown as RequestHandler,
 	listUsersValidator,
 	validationMiddleware as unknown as RequestHandler,
-	listUsers as RequestHandler
+	listUsers as RequestHandler,
 );
 
 router.get("/stats", getHomepageStats as RequestHandler);

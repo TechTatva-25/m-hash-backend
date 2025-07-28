@@ -1,14 +1,24 @@
 import { NextFunction, Request, Response } from "express";
 import { matchedData, validationResult } from "express-validator";
 
-import { BadRequestException, ForbiddenException, UnprocessableEntityException } from "../models/exceptions";
+import {
+	BadRequestException,
+	ForbiddenException,
+	UnprocessableEntityException,
+} from "../models/exceptions";
 import User, { UserRoles } from "../models/User/user";
 
-export async function registerMiddleware(req: Request, _res: Response, next: NextFunction): Promise<void> {
+export async function registerMiddleware(
+	req: Request,
+	_res: Response,
+	next: NextFunction,
+): Promise<void> {
 	try {
 		const result = validationResult(req);
 		if (!result.isEmpty()) {
-			throw new UnprocessableEntityException("Validation failed", { errors: result.array() });
+			throw new UnprocessableEntityException("Validation failed", {
+				errors: result.array(),
+			});
 		}
 		const data = matchedData<Record<string, string>>(req);
 		const check = await User.findOne({ email: data.email });
@@ -25,11 +35,17 @@ export async function registerMiddleware(req: Request, _res: Response, next: Nex
 	}
 }
 
-export async function validationMiddleware(req: Request, _res: Response, next: NextFunction): Promise<void> {
+export async function validationMiddleware(
+	req: Request,
+	_res: Response,
+	next: NextFunction,
+): Promise<void> {
 	try {
 		const result = validationResult(req);
 		if (!result.isEmpty()) {
-			throw new UnprocessableEntityException("Validation failed", { errors: result.array() });
+			throw new UnprocessableEntityException("Validation failed", {
+				errors: result.array(),
+			});
 		}
 		next();
 	} catch (err) {
@@ -37,7 +53,11 @@ export async function validationMiddleware(req: Request, _res: Response, next: N
 	}
 }
 
-export async function authRequiredMiddleWare(req: Request, _res: Response, next: NextFunction): Promise<void> {
+export async function authRequiredMiddleWare(
+	req: Request,
+	_res: Response,
+	next: NextFunction,
+): Promise<void> {
 	try {
 		if (!req.session.userId) {
 			throw new ForbiddenException("Not authenticated");
@@ -47,7 +67,9 @@ export async function authRequiredMiddleWare(req: Request, _res: Response, next:
 			throw new ForbiddenException("User not found");
 		}
 		if (!user.verified) {
-			throw new ForbiddenException("User not verified, please check your email");
+			throw new ForbiddenException(
+				"User not verified, please check your email",
+			);
 		}
 		next();
 	} catch (err) {
@@ -55,7 +77,11 @@ export async function authRequiredMiddleWare(req: Request, _res: Response, next:
 	}
 }
 
-export async function adminRequiredMiddleware(req: Request, _res: Response, next: NextFunction): Promise<void> {
+export async function adminRequiredMiddleware(
+	req: Request,
+	_res: Response,
+	next: NextFunction,
+): Promise<void> {
 	try {
 		if (!req.session.userId) {
 			throw new ForbiddenException("Not authenticated");
@@ -65,7 +91,9 @@ export async function adminRequiredMiddleware(req: Request, _res: Response, next
 			throw new ForbiddenException("User not found");
 		}
 		if (!user.verified) {
-			throw new ForbiddenException("User not verified, please check your email");
+			throw new ForbiddenException(
+				"User not verified, please check your email",
+			);
 		}
 		if (user.role !== UserRoles.ADMIN) {
 			throw new ForbiddenException("User is not an admin");
@@ -76,7 +104,11 @@ export async function adminRequiredMiddleware(req: Request, _res: Response, next
 	}
 }
 
-export async function judgeRequiredMiddleware(req: Request, _res: Response, next: NextFunction): Promise<void> {
+export async function judgeRequiredMiddleware(
+	req: Request,
+	_res: Response,
+	next: NextFunction,
+): Promise<void> {
 	try {
 		if (!req.session.userId) {
 			throw new ForbiddenException("Not authenticated");
@@ -86,10 +118,14 @@ export async function judgeRequiredMiddleware(req: Request, _res: Response, next
 			throw new ForbiddenException("User not found");
 		}
 		if (!user.verified) {
-			throw new ForbiddenException("User not verified, please check your email");
+			throw new ForbiddenException(
+				"User not verified, please check your email",
+			);
 		}
 		if (!(user.role == UserRoles.JUDGE || user.role == UserRoles.ADMIN)) {
-			throw new ForbiddenException("User does not have judge or admin privileges");
+			throw new ForbiddenException(
+				"User does not have judge or admin privileges",
+			);
 		}
 		next();
 	} catch (err) {

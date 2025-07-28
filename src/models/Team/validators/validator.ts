@@ -1,7 +1,9 @@
 import { body, query } from "express-validator";
 
 export const createTeamValidator = [
-	body("name", "Please enter the team name").isString().isLength({ min: 1, max: 255 }),
+	body("name", "Please enter the team name")
+		.isString()
+		.isLength({ min: 1, max: 255 }),
 ];
 
 export const listTeamsValidator = [
@@ -10,4 +12,7 @@ export const listTeamsValidator = [
 	query("team_name").isString().optional(),
 ];
 
-export const removeMemberValidator = [body("teamId").isString().isMongoId(), body("memberId").isString().isMongoId()];
+export const removeMemberValidator = [
+	body("teamId").isString().isMongoId(),
+	body("memberId").isString().isMongoId(),
+];
