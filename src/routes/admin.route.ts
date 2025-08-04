@@ -20,6 +20,7 @@ import {
 	deassignProblem,
 	getTeamJudgeMapping,
 	exportSubmissionsToExcel,
+	sendAdminMessage
 } from "../controllers/admin.controller";
 import { getTeam, getProb } from "../controllers/judge.controller";
 
@@ -65,6 +66,8 @@ router.post("/admin-reject", adminReject as RequestHandler);
 router.post("/team", getTeam as RequestHandler);
 
 router.post("/prob", getProb as RequestHandler);
+
+router.post("/send-message", sendAdminMessage as RequestHandler);
 
 router.get("/stats", getAdminStats as RequestHandler);
 
