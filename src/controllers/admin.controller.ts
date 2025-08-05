@@ -658,20 +658,20 @@ export const sendAdminMessage = async (
 	next: NextFunction,
 ): Promise<void> => {
 	try {
-		const { userId, message } = req.body as Record<string, string>;
+		const { mailId, message } = req.body as Record<string, string>;
 
-		if (!userId || !message) {
-			throw new BadRequestException("userId and message are required.");
+		if (!mailId || !message) {
+			throw new BadRequestException("mailId and message are required.");
 		}
 
-		const user = await User.findById(userId);
-		if (!user) {
-			throw new BadRequestException("User not found.");
-		}
+		// const user = await User.findById(userId);
+		// if (!user) {
+		// 	throw new BadRequestException("User not found.");
+		// }
 
 		const mailOptions = {
 			from: process.env.EMAIL_USER,
-			to: user.email,
+			to: mailId,
 			subject: "Response to Your Ticket",
 			html: emailHtml(message),
 		};
