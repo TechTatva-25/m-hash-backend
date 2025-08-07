@@ -22,7 +22,9 @@ export interface queryProps {
   $or?: Record<string, { $regex: string; $options: string }>[];
   college?: string;
   collegeOther?: string;
+  verified?: boolean;
 }
+
 
 interface BugHistory {
   score: number;
@@ -489,7 +491,11 @@ export const listUsers = async (
       throw new ConflictException("User not found");
     }
 
-    const query: queryProps = options.length ? { $or: options } : {};
+    const query: queryProps = {
+  ...(options.length ? { $or: options } : {}),
+  verified: true,
+};
+
 
     if (req.session.role === "user") {
       query.college = user.college.toString();
