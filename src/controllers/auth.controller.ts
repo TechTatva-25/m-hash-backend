@@ -569,11 +569,8 @@ export const getHomepageStats = async (
     // const submissions = await Submission.countDocuments({});
 
     // const colleges = new Set((await Team.find({}, "college -_id")).map((team) => team.college.toString())).size;
-    const colleges = new Set(
-      (await User.find({}, "collegeOther -_id")).map(
-        (team) => team.collegeOther
-      )
-    ).size;
+    const colleges = (await User.distinct("college")).length;
+
 
     res.status(200).send({
       users,
