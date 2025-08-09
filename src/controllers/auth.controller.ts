@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import axios from "axios";
-
+import validator from "validator";
 import {
   sendForgotPasswordEmail,
   sendOTPVerificationEmail,
@@ -395,7 +395,8 @@ export const forgotPassword = async (
    */
   try {
     const { email } = req.body as Record<string, string>;
-    const user = await User.findOne({ email });
+    const normalizedEmail  = validator.normalizeEmail(email, { gmail_remove_dots: true }) ?? email;
+    const user = await User.findOne({ email: normalizedEmail  });
     if (!user) {
       throw new UnauthorizedException("No such user found");
     }
@@ -449,7 +450,9 @@ export const resetPassword = async (
     if (decoded.type !== SignType.FORGOT_PASSWORD) {
       throw new UnauthorizedException("Invalid token");
     }
-    const user = await User.findOne({ email: decoded.email });
+    const normalizedEmail = validator.normalizeEmail(decoded.email, { gmail_remove_dots: true }) ?? decoded.email;
+    const user = await User.findOne({ email: normalizedEmail });
+
     if (!user) {
       throw new UnauthorizedException("No such user found");
     }
